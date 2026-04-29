@@ -32,10 +32,9 @@ public class Database {
         // remove the tables if they already exist
         try {
             Statement stmt = dbconn.createStatement();
-            stmt.executeUpdate(Setup.UserDrop);
-            stmt.executeUpdate(Setup.SubscriptionDrop);
-            stmt.executeUpdate(Setup.ConversationDrop);
-            stmt.executeUpdate(Setup.MessageDrop);
+            stmt.executeUpdate(Setup.PersonDrop);
+            stmt.executeUpdate(Setup.LanguageDrop);
+            stmt.executeUpdate(Setup.BillingRecordDrop);
             // commit
             stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
@@ -45,10 +44,9 @@ public class Database {
         // create the tables
         try {
             Statement stmt = dbconn.createStatement();
-            stmt.executeUpdate(Setup.User);
-            stmt.executeUpdate(Setup.Subscription);
-            stmt.executeUpdate(Setup.Conversation);
-            stmt.executeUpdate(Setup.Message);
+            stmt.executeUpdate(Setup.PersonTable);
+            stmt.executeUpdate(Setup.LanguageTable);
+            stmt.executeUpdate(Setup.BillingRecordTable);
             // commit
             stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
@@ -57,13 +55,11 @@ public class Database {
             return;
         }
 
-        // create triggers
         try {
             Statement stmt = dbconn.createStatement();
-            stmt.executeUpdate(Setup.UserTrigger);
-            stmt.executeUpdate(Setup.SubscriptionTrigger);
-            stmt.executeUpdate(Setup.ConversationTrigger);
-            stmt.executeUpdate(Setup.MessageTrigger);
+            stmt.executeUpdate(Setup.PersonTrigger);
+            stmt.executeUpdate(Setup.LanguageTrigger);
+            stmt.executeUpdate(Setup.BillingRecordTrigger);
             // commit
             stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
@@ -75,16 +71,20 @@ public class Database {
         // create sample data
         try {
             Statement stmt = dbconn.createStatement();
-            stmt.executeUpdate(Setup.UserData);
-            stmt.executeUpdate(Setup.SubscriptionData);
-            stmt.executeUpdate(Setup.ConversationData);
-            stmt.executeUpdate(Setup.MessageData);
+            for (String query: Setup.PersonData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.LanguageData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.BillingRecordData) {
+                stmt.executeUpdate(query);
+            }
             // commit
             stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
             System.out.println("Error creating sample data");
             e.printStackTrace();
-            return;
         }
 
     }
