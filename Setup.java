@@ -16,7 +16,7 @@ public class Setup {
         "INSERT INTO Person VALUES (344, 'charlie', 'password3', 'nothing')"
     };
     public static final String PersonDrop = 
-        "DROP TABLE Person";
+        "DROP TABLE Person CASCADE CONSTRAINTS";
 
     // Language
     public static final String LanguageTable = "" + 
@@ -30,7 +30,7 @@ public class Setup {
         "INSERT INTO mngo1.Language VALUES (3, 'Fremch')"
     };
     public static final String LanguageDrop = 
-        "DROP TABLE mngo1.Language";
+        "DROP TABLE mngo1.Language CASCADE CONSTRAINTS";
 
     // Billing Record
     public static final String BillingRecordTable =
@@ -45,7 +45,7 @@ public class Setup {
         "INSERT INTO mngo1.BillingRecord VALUES (3, 'CSC Place', 'Academics')"
     };
     public static final String BillingRecordDrop = 
-        "DROP TABLE mngo1.BillingRecord";
+        "DROP TABLE mngo1.BillingRecord CASCADE CONSTRAINTS";
 
     // Invoice
     public static final String InvoiceTable =
@@ -61,7 +61,7 @@ public class Setup {
         "INSERT INTO mngo1.Invoice VALUES (3, 'Void', 99.99, TO_DATE('09-13-23', 'MM-DD-RR'))"
     };
     public static final String InvoiceDrop = 
-        "DROP TABLE mngo1.Invoice";
+        "DROP TABLE mngo1.Invoice CASCADE CONSTRAINTS";
     
     // Membership
     public static final String MembershipTable =
@@ -77,7 +77,7 @@ public class Setup {
         "INSERT INTO mngo1.Membership VALUES (3, 0, 1, 20)"
     };
     public static final String MembershipDrop = 
-        "DROP TABLE mngo1.Membership";
+        "DROP TABLE mngo1.Membership CASCADE CONSTRAINTS";
 
     // Ticket
     public static final String TicketTable =
@@ -93,7 +93,7 @@ public class Setup {
         "INSERT INTO mngo1.Ticket VALUES (3, 6010, 'Waiting', 'Bananas')"
     };
     public static final String TicketDrop = 
-        "DROP TABLE mngo1.Ticket";
+        "DROP TABLE mngo1.Ticket CASCADE CONSTRAINTS";
     
     // Agent
     public static final String AgentTable =
@@ -107,7 +107,7 @@ public class Setup {
         "INSERT INTO mngo1.Agent VALUES (3, 'Luke')"
     };
     public static final String AgentDrop = 
-        "DROP TABLE mngo1.Agent";
+        "DROP TABLE mngo1.Agent CASCADE CONSTRAINTS";
 
     // Workspace
     public static final String WorkspaceTrigger = "SELECT 1 FROM dual";
@@ -116,7 +116,7 @@ public class Setup {
         "INSERT INTO mngo1.Workspace VALUES ('2', 'public')"
     };
     public static final String WorkspaceDrop =
-        "DROP TABLE mngo1.Workspace";
+        "DROP TABLE mngo1.Workspace CASCADE CONSTRAINTS";
 
     // Template Prompt
     public static final String TemplatePromptTrigger = "SELECT 1 FROM dual";
@@ -125,7 +125,7 @@ public class Setup {
         "INSERT INTO mngo1.TemplatePrompt VALUES ('2', 'Summarize this document')"
     };
     public static final String TemplatePromptDrop =
-        "DROP TABLE mngo1.TemplatePrompt";
+        "DROP TABLE mngo1.TemplatePrompt CASCADE CONSTRAINTS";
 
     // User Prompt
     public static final String UserPromptTrigger = "SELECT 1 FROM dual";
@@ -133,7 +133,7 @@ public class Setup {
         "INSERT INTO mngo1.UserPrompt VALUES ('1', 'Hello this is my first prompt')"
     };
     public static final String UserPromptDrop = 
-        "DROP TABLE mngo1.UserPrompt";
+        "DROP TABLE mngo1.UserPrompt CASCADE CONSTRAINTS";
 
     // Prompt category
     public static final String PromptCategoryTrigger = "SELECT 1 FROM dual";
@@ -142,7 +142,7 @@ public class Setup {
         "INSERT INTO mngo1.PromptCategory VALUES ('2', 'Useless prompts')"
     };
     public static final String promptCategoryDrop = 
-        "DROP TABLE mngo1.PromptCategory";
+        "DROP TABLE mngo1.PromptCategory CASCADE CONSTRAINTS";
 
     // Conversation
     public static final String ConversationTable =
@@ -156,7 +156,7 @@ public class Setup {
         "INSERT INTO mngo1.Conversation VALUES (3, 'polygons')"
     };
     public static final String ConversationDrop = 
-        "DROP TABLE mngo1.Conversation";
+        "DROP TABLE mngo1.Conversation CASCADE CONSTRAINTS";
 
     // Persona
     public static final String PersonaTable =
@@ -171,14 +171,14 @@ public class Setup {
         "INSERT INTO mngo1.Persona VALUES (3, 'Claude', 'dont ask')"
     };
     public static final String PersonaDrop = 
-        "DROP TABLE mngo1.Persona";
+        "DROP TABLE mngo1.Persona CASCADE CONSTRAINTS";
 
     // Message
     public static final String MessageTable =
         "CREATE TABLE mngo1.Message (" + 
         "mid NUMBER NOT NULL, " +
         "cid NUMBER NOT NULL, " +
-        "message VARCHAR2(10000) NOT NULL, " +
+        "message VARCHAR2(1000) NOT NULL, " +
         "sender VARCHAR2(255) NOT NULL, " +
         "ratingText VARCHAR2(255), " +
         "rating NUMBER NOT NULL, " +
@@ -191,7 +191,7 @@ public class Setup {
         "INSERT INTO mngo1.Message VALUES (1, 1, 'hello world', 'user', NULL, 0, NULL, 'hello')"
     };
     public static final String MessageDrop = 
-        "DROP TABLE mngo1.Message";
+        "DROP TABLE mngo1.Message CASCADE CONSTRAINTS";
 
     // Bookmark
     public static final String BookmarkTable =
@@ -203,12 +203,12 @@ public class Setup {
         "CONSTRAINT fk_m FOREIGN KEY (mid, cid)\nREFERENCES mngo1.Message(mid, cid) ON DELETE SET NULL) ";
     public static final String BookmarkTrigger = "SELECT 1 FROM dual";
     public static final String[] BookmarkData = {
-        "INSERT INTO mngo1.Bookmark VALUES (1, 1)",
-        "INSERT INTO mngo1.Bookmark VALUES (2, 2)",
-        "INSERT INTO mngo1.Bookmark VALUES (3, 3)"
+        "INSERT INTO mngo1.Bookmark VALUES (1, 1, 1)",
+        "INSERT INTO mngo1.Bookmark VALUES (2, 1, 1)",
+        "INSERT INTO mngo1.Bookmark VALUES (3, 1, 1)"
     };
     public static final String BookmarkDrop = 
-        "DROP TABLE mngo1.Conversation";
+        "DROP TABLE mngo1.Bookmark CASCADE CONSTRAINTS";
     
     // Workspace
     // Template Prompt

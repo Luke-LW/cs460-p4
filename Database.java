@@ -23,14 +23,16 @@ public class Database {
         Connection dbconn = null;
         try {
             dbconn = DriverManager.getConnection(oracle, username, password);
+            dbconn.setAutoCommit(true);
         } catch (SQLException e) {
             System.out.println("Connection Failed! Check output console");
             e.printStackTrace();
             return;
         }
-
         // remove the tables if they already exist
+        
         try {
+            System.out.println("Dropping tables...");
             Statement stmt = dbconn.createStatement();
             stmt.executeUpdate(Setup.PersonDrop);
             stmt.executeUpdate(Setup.LanguageDrop);
@@ -43,14 +45,13 @@ public class Database {
             stmt.executeUpdate(Setup.PersonaDrop);
             stmt.executeUpdate(Setup.MessageDrop);
             stmt.executeUpdate(Setup.BookmarkDrop);
-            // commit
-            stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
             // do nothing
         }
 
         // create the tables
         try {
+            System.out.println("Creating tables...");
             Statement stmt = dbconn.createStatement();
             stmt.executeUpdate(Setup.PersonTable);
             stmt.executeUpdate(Setup.LanguageTable);
@@ -63,8 +64,6 @@ public class Database {
             stmt.executeUpdate(Setup.PersonaTable);
             stmt.executeUpdate(Setup.MessageTable);
             stmt.executeUpdate(Setup.BookmarkTable);
-            // commit
-            stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
             System.out.println("Error creating tables");
             e.printStackTrace();
@@ -72,6 +71,7 @@ public class Database {
         }
 
         try {
+            System.out.println("Creating Triggers...");
             Statement stmt = dbconn.createStatement();
             stmt.executeUpdate(Setup.PersonTrigger);
             stmt.executeUpdate(Setup.LanguageTrigger);
@@ -84,9 +84,8 @@ public class Database {
             stmt.executeUpdate(Setup.PersonaTrigger);
             stmt.executeUpdate(Setup.MessageTrigger);
             stmt.executeUpdate(Setup.BookmarkTrigger);
-
-            // commit
-            stmt.executeUpdate("COMMIT");
+            
+            dbconn.setAutoCommit(false);
         } catch (SQLException e) {
             System.out.println("Error creating triggers");
             e.printStackTrace();
@@ -95,6 +94,7 @@ public class Database {
 
         // create sample data
         try {
+            System.out.println("Creating Sample Data...");
             Statement stmt = dbconn.createStatement();
             for (String query: Setup.PersonData) {
                 stmt.executeUpdate(query);
