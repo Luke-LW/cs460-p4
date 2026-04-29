@@ -54,7 +54,7 @@ public class Interface {
         "\f------------------------\n" +
         "Prompt Library\n" +
         "1: Add prompt template\n" +
-        "2: Delete prompt template\n" +
+        "2: Update prompt template\n" +
         "3: Back\n" +
         "------------------------\n";
 
@@ -270,7 +270,7 @@ public class Interface {
                 case 1: // New prompt template
                     break;
                 
-                case 2: // Delete prompt template
+                case 2: // Update prompt template
                     break;
 
                 case 3: // back

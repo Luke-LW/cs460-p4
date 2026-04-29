@@ -45,6 +45,12 @@ public class Database {
             stmt.executeUpdate(Setup.PersonaDrop);
             stmt.executeUpdate(Setup.MessageDrop);
             stmt.executeUpdate(Setup.BookmarkDrop);
+            stmt.executeUpdate(Setup.WorkspaceDrop);
+            stmt.executeUpdate(Setup.TemplatePromptDrop);
+            stmt.executeUpdate(Setup.UserPromptDrop);
+            stmt.executeUpdate(Setup.PromptCategoryDrop);
+            // commit
+            stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
             // do nothing
         }
@@ -64,6 +70,12 @@ public class Database {
             stmt.executeUpdate(Setup.PersonaTable);
             stmt.executeUpdate(Setup.MessageTable);
             stmt.executeUpdate(Setup.BookmarkTable);
+            stmt.executeUpdate(Setup.WorkspaceTable);
+            stmt.executeUpdate(Setup.TemplatePromptTable);
+            stmt.executeUpdate(Setup.UserPromptTable);
+            stmt.executeUpdate(Setup.PromptCategoryTable);
+            // commit
+            stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
             System.out.println("Error creating tables");
             e.printStackTrace();
@@ -84,8 +96,13 @@ public class Database {
             stmt.executeUpdate(Setup.PersonaTrigger);
             stmt.executeUpdate(Setup.MessageTrigger);
             stmt.executeUpdate(Setup.BookmarkTrigger);
-            
-            dbconn.setAutoCommit(false);
+
+            stmt.executeUpdate(Setup.WorkspaceTrigger);
+            stmt.executeUpdate(Setup.TemplatePromptTrigger);
+            stmt.executeUpdate(Setup.UserPromptTrigger);
+            stmt.executeUpdate(Setup.PromptCategoryTrigger);
+            // commit
+            stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
             System.out.println("Error creating triggers");
             e.printStackTrace();
@@ -127,6 +144,18 @@ public class Database {
                 stmt.executeUpdate(query);
             }
             for (String query: Setup.BookmarkData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.WorkspaceData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.TemplatePromptData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.UserPromptData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.PromptCategoryData) {
                 stmt.executeUpdate(query);
             }
             // commit
