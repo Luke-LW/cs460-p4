@@ -3,7 +3,7 @@
 
 -- Select all bookmarks and join with message and conversations to get neccessary details. 
 SELECT 
-    b.uid,
+    b.userId,
     u.username, 
     c.title, 
     m.message, 
@@ -11,9 +11,9 @@ SELECT
 FROM Bookmark b
 JOIN Message m ON b.mid = m.mid          
 JOIN Conversation c ON m.cid = c.cid
-JOIN User u ON b.uid = u.uid
+JOIN User u ON b.userId = u.userId
 -- Only show bookmarks where the userID matches the "given user" (replace ? with the actual user ID when executing the query with prepared statement)
-WHERE b.uid = ?;
+WHERE b.userId = ?;
 
 
 
@@ -23,24 +23,24 @@ WHERE b.uid = ?;
 
 -- Select from Users, joing with BillingRecord and Invoice to find neccessary information.
 SELECT 
-    u.uid, 
+    u.userId, 
     u.email, 
     SUM(i.amount) AS total_amount_owed, 
     MAX(msg.last_conversation_date) AS last_conversation_date
 FROM User u
-JOIN BillingRecord br ON u.uid = br.uid
+JOIN BillingRecord br ON u.userId = br.userId
 JOIN Invoice i ON br.brid = i.brid                     
 LEFT JOIN (
     -- Subquery to find the most recent message (last conversation activity) per user
     -- Only select the message from this user with the latest timestamp, which is also the date of their last conversation
-    SELECT c.uid, MAX(m.timestamp) AS last_conversation_date
+    SELECT c.userId, MAX(m.timestamp) AS last_conversation_date
     FROM Message m
     JOIN Conversation c ON m.cid = c.cid
-    GROUP BY c.uid
-) msg ON u.uid = msg.uid
+    GROUP BY c.userId
+) msg ON u.userId = msg.userId
 -- Only consider invoices where the status is 'Unpaid'
 WHERE i.status = 'Unpaid'
-GROUP BY u.uid, u.email
+GROUP BY u.userId, u.email
 -- Verify the total amount is greater than 0 an the user's unpaid invoice actually has money due
 HAVING SUM(i.amount) > 0;
 
@@ -98,7 +98,7 @@ SELECT
     COUNT(DISTINCT c.cid) AS num_conversations
 FROM User u
 JOIN Membership mbr ON u.mid = mbr.mid                    -- Get membership tier
-JOIN Conversation c ON u.uid = c.uid                      -- Conversations created by the user
+JOIN Conversation c ON u.userId = c.userId                      -- Conversations created by the user
 JOIN Message m      ON c.cid = m.cid                      -- Messages in those conversations
 WHERE m.sender = 'User'                                   -- Only count messages sent by users 
 GROUP BY u.username, mbr.tier
