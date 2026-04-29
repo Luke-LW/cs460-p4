@@ -35,6 +35,14 @@ public class Database {
             stmt.executeUpdate(Setup.PersonDrop);
             stmt.executeUpdate(Setup.LanguageDrop);
             stmt.executeUpdate(Setup.BillingRecordDrop);
+            stmt.executeUpdate(Setup.InvoiceDrop);
+            stmt.executeUpdate(Setup.MembershipDrop);
+            stmt.executeUpdate(Setup.TicketDrop);
+            stmt.executeUpdate(Setup.AgentDrop);
+            stmt.executeUpdate(Setup.ConversationDrop);
+            stmt.executeUpdate(Setup.PersonaDrop);
+            stmt.executeUpdate(Setup.MessageDrop);
+            stmt.executeUpdate(Setup.BookmarkDrop);
             // commit
             stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
@@ -47,6 +55,14 @@ public class Database {
             stmt.executeUpdate(Setup.PersonTable);
             stmt.executeUpdate(Setup.LanguageTable);
             stmt.executeUpdate(Setup.BillingRecordTable);
+            stmt.executeUpdate(Setup.InvoiceTable);
+            stmt.executeUpdate(Setup.MembershipTable);
+            stmt.executeUpdate(Setup.TicketTable);
+            stmt.executeUpdate(Setup.AgentTable);
+            stmt.executeUpdate(Setup.ConversationTable);
+            stmt.executeUpdate(Setup.PersonaTable);
+            stmt.executeUpdate(Setup.MessageTable);
+            stmt.executeUpdate(Setup.BookmarkTable);
             // commit
             stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
@@ -60,6 +76,15 @@ public class Database {
             stmt.executeUpdate(Setup.PersonTrigger);
             stmt.executeUpdate(Setup.LanguageTrigger);
             stmt.executeUpdate(Setup.BillingRecordTrigger);
+            stmt.executeUpdate(Setup.InvoiceTrigger);
+            stmt.executeUpdate(Setup.MembershipTrigger);
+            stmt.executeUpdate(Setup.TicketTrigger);
+            stmt.executeUpdate(Setup.AgentTrigger);
+            stmt.executeUpdate(Setup.ConversationTrigger);
+            stmt.executeUpdate(Setup.PersonaTrigger);
+            stmt.executeUpdate(Setup.MessageTrigger);
+            stmt.executeUpdate(Setup.BookmarkTrigger);
+
             // commit
             stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
@@ -78,6 +103,30 @@ public class Database {
                 stmt.executeUpdate(query);
             }
             for (String query: Setup.BillingRecordData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.InvoiceData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.MembershipData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.TicketData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.AgentData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.ConversationData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.PersonaData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.MessageData) {
+                stmt.executeUpdate(query);
+            }
+            for (String query: Setup.BookmarkData) {
                 stmt.executeUpdate(query);
             }
             // commit
