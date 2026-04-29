@@ -158,7 +158,7 @@ public class Setup {
         "INSERT INTO mngo1.PromptCategory VALUES (1, 'Useful prompts')",
         "INSERT INTO mngo1.PromptCategory VALUES (2, 'Useless prompts')"
     };
-    public static final String promptCategoryDrop = 
+    public static final String PromptCategoryDrop = 
         "DROP TABLE mngo1.PromptCategory CASCADE CONSTRAINTS";
 
     // Conversation
