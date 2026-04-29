@@ -110,38 +110,55 @@ public class Setup {
         "DROP TABLE mngo1.Agent";
 
     // Workspace
+    public static final String WorkspaceTable =
+        "CREATE TABLE mngo1.Workspace (" +
+        "wid NUMBER PRIMARY KEY, " +
+        "privacy VARCHAR(255) NOT NULL )";
     public static final String WorkspaceTrigger = "SELECT 1 FROM dual";
     public static final String[] WorkspaceData = {
-        "INSERT INTO mngo1.Workspace VALUES ('1', 'private')",
-        "INSERT INTO mngo1.Workspace VALUES ('2', 'public')"
+        "INSERT INTO mngo1.Workspace VALUES (1, 'private')",
+        "INSERT INTO mngo1.Workspace VALUES (2, 'public')"
     };
     public static final String WorkspaceDrop =
         "DROP TABLE mngo1.Workspace";
 
     // Template Prompt
+    public static final String TemplatePromptTable =
+        "CREATE TABLE mngo1.TemplatePrompt (" +
+        "tpid NUMBER PRIMARY KEY, " +
+        "prompt VARCHAR(255) NOT NULL )";
     public static final String TemplatePromptTrigger = "SELECT 1 FROM dual";
     public static final String[] TemplatePromptData = {
-        "INSERT INTO mngo1.TemplatePrompt VALUES ('1', 'List popular restaurants in Tucson')",
-        "INSERT INTO mngo1.TemplatePrompt VALUES ('2', 'Summarize this document')"
+        "INSERT INTO mngo1.TemplatePrompt VALUES (1, 'List popular restaurants in Tucson')",
+        "INSERT INTO mngo1.TemplatePrompt VALUES (2, 'Summarize this document')"
     };
     public static final String TemplatePromptDrop =
         "DROP TABLE mngo1.TemplatePrompt";
 
     // User Prompt
+    public static final String UserPromptTable =
+        "CREATE TABLE mngo1.UserPrompt (" +
+        "upid NUMBER PRIMARY KEY, " +
+        "instructions VARCHAR(255) NOT NULL, " +
+        "privacy VARCHAR(255) NOT NULL )";
     public static final String UserPromptTrigger = "SELECT 1 FROM dual";
     public static final String[] UserPromptData = {
-        "INSERT INTO mngo1.UserPrompt VALUES ('1', 'Hello this is my first prompt')"
+        "INSERT INTO mngo1.UserPrompt VALUES (1, 'Hello this is my first prompt', 'public')"
     };
     public static final String UserPromptDrop = 
         "DROP TABLE mngo1.UserPrompt";
 
     // Prompt category
+    public static final String PromptCategoryTable =
+        "CREATE TABLE mngo1.PromptCategory (" +
+        "pcid NUMBER PRIMARY KEY, " +
+        "categoryname VARCHAR(255) NOT NULL )";
     public static final String PromptCategoryTrigger = "SELECT 1 FROM dual";
     public static final String[] PromptCategoryData = {
-        "INSERT INTO mngo1.PromptCategory VALUES ('1', 'Useful prompts')",
-        "INSERT INTO mngo1.PromptCategory VALUES ('2', 'Useless prompts')"
+        "INSERT INTO mngo1.PromptCategory VALUES (1, 'Useful prompts')",
+        "INSERT INTO mngo1.PromptCategory VALUES (2, 'Useless prompts')"
     };
-    public static final String promptCategoryDrop = 
+    public static final String PromptCategoryDrop = 
         "DROP TABLE mngo1.PromptCategory";
 
     // Conversation
