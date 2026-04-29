@@ -109,6 +109,41 @@ public class Setup {
     public static final String AgentDrop = 
         "DROP TABLE mngo1.Agent";
 
+    // Workspace
+    public static final String WorkspaceTrigger = "SELECT 1 FROM dual";
+    public static final String[] WorkspaceData = {
+        "INSERT INTO mngo1.Workspace VALUES ('1', 'private')",
+        "INSERT INTO mngo1.Workspace VALUES ('2', 'public')"
+    };
+    public static final String WorkspaceDrop =
+        "DROP TABLE mngo1.Workspace";
+
+    // Template Prompt
+    public static final String TemplatePromptTrigger = "SELECT 1 FROM dual";
+    public static final String[] TemplatePromptData = {
+        "INSERT INTO mngo1.TemplatePrompt VALUES ('1', 'List popular restaurants in Tucson')",
+        "INSERT INTO mngo1.TemplatePrompt VALUES ('2', 'Summarize this document')"
+    };
+    public static final String TemplatePromptDrop =
+        "DROP TABLE mngo1.TemplatePrompt";
+
+    // User Prompt
+    public static final String UserPromptTrigger = "SELECT 1 FROM dual";
+    public static final String[] UserPromptData = {
+        "INSERT INTO mngo1.UserPrompt VALUES ('1', 'Hello this is my first prompt')"
+    };
+    public static final String UserPromptDrop = 
+        "DROP TABLE mngo1.UserPrompt";
+
+    // Prompt category
+    public static final String PromptCategoryTrigger = "SELECT 1 FROM dual";
+    public static final String[] PromptCategoryData = {
+        "INSERT INTO mngo1.PromptCategory VALUES ('1', 'Useful prompts')",
+        "INSERT INTO mngo1.PromptCategory VALUES ('2', 'Useless prompts')"
+    };
+    public static final String promptCategoryDrop = 
+        "DROP TABLE mngo1.PromptCategory";
+
     // Conversation
     public static final String ConversationTable =
         "CREATE TABLE mngo1.Conversation (" + 
