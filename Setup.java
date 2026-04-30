@@ -227,8 +227,58 @@ public class Setup {
     public static final String BookmarkDrop = 
         "DROP TABLE mngo1.Bookmark CASCADE CONSTRAINTS";
     
-    // Workspace
-    // Template Prompt
-    // User Prompt
-    // Prompt Category
+    /**
+     * These are special tables meant to properly manage
+     * our many-to-many relationships.
+     */
+    
+    // User - Workspace
+    public static final String UserWorkspaceTable =
+        "CREATE TABLE mngo1.UserWorkspace (" + 
+        "userId NUMBER NOT NULL, " +
+        "wid NUMBER NOT NUll)";
+    public static final String UserWorkspaceTrigger = "SELECT 1 FROM dual";
+    public static final String[] UserWorkspaceData = {};
+    public static final String UserWorkspaceDrop = 
+        "DROP TABLE mngo1.UserWorkspace CASCADE CONSTRAINTS";
+
+    // UserPrompt - Workspace
+    public static final String UserPromptWorkspaceTable =
+        "CREATE TABLE mngo1.UserPromptWorkspace (" + 
+        "upid NUMBER NOT NULL, " +
+        "wid NUMBER NOT NUll)";
+    public static final String UserPromptWorkspaceTrigger = "SELECT 1 FROM dual";
+    public static final String[] UserPromptWorkspaceData = {};
+    public static final String UserPromptWorkspaceDrop = 
+        "DROP TABLE mngo1.UserPromptWorkspace CASCADE CONSTRAINTS";
+    
+    // Template Prompt - Workspace
+    public static final String TemplatePromptWorkspaceTable =
+        "CREATE TABLE mngo1.TemplatePromptWorkspace (" + 
+        "upid NUMBER NOT NULL, " +
+        "wid NUMBER NOT NUll)";
+    public static final String TemplatePromptWorkspaceTrigger = "SELECT 1 FROM dual";
+    public static final String[] TemplatePromptWorkspaceData = {};
+    public static final String TemplatePromptWorkspaceDrop = 
+        "DROP TABLE mngo1.TemplatePromptWorkspace CASCADE CONSTRAINTS";
+
+    // Conversation - Workspace
+    public static final String ConversationwWorkspaceTable =
+        "CREATE TABLE mngo1.ConversationwWorkspace (" + 
+        "upid NUMBER NOT NULL, " +
+        "wid NUMBER NOT NUll)";
+    public static final String ConversationwWorkspaceTrigger = "SELECT 1 FROM dual";
+    public static final String[] ConversationwWorkspaceData = {};
+    public static final String ConversationwWorkspaceDrop = 
+        "DROP TABLE mngo1.ConversationwWorkspace CASCADE CONSTRAINTS";
+
+    // Prompt Category - User Prompt
+    public static final String PromptCategoryUserPromptTable =
+        "CREATE TABLE mngo1.PromptCategoryUserPrompt (" + 
+        "upid NUMBER NOT NULL, " +
+        "wid NUMBER NOT NUll)";
+    public static final String PromptCategoryUserPromptTrigger = "SELECT 1 FROM dual";
+    public static final String[] PromptCategoryUserPromptData = {};
+    public static final String PromptCategoryUserPromptDrop = 
+        "DROP TABLE mngo1.PromptCategoryUserPrompt CASCADE CONSTRAINTS";
 }
