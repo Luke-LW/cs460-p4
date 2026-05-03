@@ -47,9 +47,9 @@ public class Setup {
         "email VARCHAR2(255) NOT NULL, " +
         // Foreign Key
         "lid NUMBER NOT NULL, " +
-        "CONSTRAINT fk_l FOREIGN KEY (lid) REFERENCES mngo1.Language(lid), " +
-        "CONSTRAINT unique_email UNIQUE (email), " +
-        "CONSTRAINT unique_name UNIQUE (username))";
+        "CONSTRAINT fk1 FOREIGN KEY (lid) REFERENCES mngo1.Language(lid), " +
+        "CONSTRAINT uni1 UNIQUE (email), " +
+        "CONSTRAINT uni2 UNIQUE (username))";
     public static final String PersonDrop = 
         "DROP TABLE Person CASCADE CONSTRAINTS PURGE";
 
@@ -81,7 +81,7 @@ public class Setup {
      * It is linked to a user upon user creation.
      * 
      * -- Fields --
-     * @field bid (PK)
+     * @field brid (PK)
      * @field payaddress
      * @field paymethod
      * 
@@ -96,12 +96,13 @@ public class Setup {
      */
     public static final String BillingRecordTable =
         "CREATE TABLE mngo1.BillingRecord (" + 
-        "bid NUMBER PRIMARY KEY, " +
+        "brid NUMBER PRIMARY KEY, " +
         "payaddress VARCHAR2(255), " +
         "paymethod VARCHAR2(255), " +
         // foreign key
         "userId NUMBER NOT NULL, " +
-        "CONSTRAINT check_paymethod CHECK (paymethod IN ('credit', 'debit', 'check', 'cash', 'other')))";
+        "CONSTRAINT fk2 FOREIGN KEY (userId) REFERENCES mngo1.Person(userId) ON DELETE CASCADE, " +
+        "CONSTRAINT chk1 CHECK (paymethod IN ('credit', 'debit', 'check', 'cash', 'other')))";
     public static final String BillingRecordDrop = 
         "DROP TABLE mngo1.BillingRecord CASCADE CONSTRAINTS PURGE";
 
@@ -133,7 +134,8 @@ public class Setup {
         "month DATE, " +
         // foreign key
         "brid NUMBER NOT NULL, " +
-        "CONSTRAINT check_status CHECK (status IN ('unpaid', 'paid')))";
+        "CONSTRAINT fk3 FOREIGN KEY (brid) REFERENCES mngo1.BillingRecord(brid) ON DELETE CASCADE, " +
+        "CONSTRAINT chk2 CHECK (status IN ('unpaid', 'paid')))";
     public static final String InvoiceDrop = 
         "DROP TABLE mngo1.Invoice CASCADE CONSTRAINTS PURGE";
     
@@ -163,7 +165,7 @@ public class Setup {
         "hasPro NUMBER NOT NULL, " +
         "tier NUMBER NOT NULL, " +
         "messageLimit NUMBER NOT NULL, " +
-        "CONSTRAINT check_hasPro CHECK (hasPro IN (0, 1)))";
+        "CONSTRAINT chk3 CHECK (hasPro IN (0, 1)))";
     public static final String MembershipDrop = 
         "DROP TABLE mngo1.Membership CASCADE CONSTRAINTS PURGE";
 
@@ -200,8 +202,9 @@ public class Setup {
         // foreign keys
         "userId NUMBER NOT NULL, " +
         "aid NUMBER, " +
-        "CONSTRAINT fk_u FOREIGN KEY (userId) REFERENCES mngo1.Person(userId), " +
-        "CONSTRAINT check_outcome CHECK (outcome IN ('Resolved', 'Escalated', 'Waiting')))";
+        "CONSTRAINT fk4 FOREIGN KEY (userId) REFERENCES mngo1.Person(userId), " +
+        "CONSTRAINT fk5 FOREIGN KEY (aid) REFERENCES mngo1.Agent(aid) ON DELETE SET NULL, " +
+        "CONSTRAINT chk4 CHECK (outcome IN ('Resolved', 'Escalated', 'Waiting')))";
     public static final String TicketDrop = 
         "DROP TABLE mngo1.Ticket CASCADE CONSTRAINTS PURGE";
     
@@ -255,7 +258,9 @@ public class Setup {
     public static final String WorkspaceTable =
         "CREATE TABLE mngo1.Workspace (" +
         "wid NUMBER PRIMARY KEY, " +
-        "privacy VARCHAR(255) NOT NULL )";
+        "privacy VARCHAR(255) NOT NULL, " +
+        "ownerId NUMBER NOT NULL, " + 
+        "CONSTRAINT fk6 FOREIGN KEY (ownerId) REFERENCES mngo1.Person(userId) ON DELETE CASCADE)";
     public static final String WorkspaceDrop =
         "DROP TABLE mngo1.Workspace CASCADE CONSTRAINTS PURGE";
 
@@ -307,7 +312,8 @@ public class Setup {
         "instructions VARCHAR(255) NOT NULL, " +
         "privacy VARCHAR(255) NOT NULL, " +
         // foreign key
-        "userId NUMBER NOT NULL)";
+        "userId NUMBER NOT NULL, " +
+        "CONSTRAINT fk7 FOREIGN KEY (userId) REFERENCES mngo1.Person(userId) ON DELETE CASCADE)";
     public static final String UserPromptDrop = 
         "DROP TABLE mngo1.UserPrompt CASCADE CONSTRAINTS PURGE";
 
@@ -334,7 +340,9 @@ public class Setup {
     public static final String PromptCategoryTable =
         "CREATE TABLE mngo1.PromptCategory (" +
         "pcid NUMBER PRIMARY KEY, " +
-        "categoryname VARCHAR(255) NOT NULL )";
+        "categoryname VARCHAR(255) NOT NULL, " +
+        "wid NUMBER NOT NULL, " + 
+        "CONSTRAINT fk8 FOREIGN KEY (wid) REFERENCES mngo1.Workspace(wid) ON DELETE CASCADE)";
     public static final String PromptCategoryDrop = 
         "DROP TABLE mngo1.PromptCategory CASCADE CONSTRAINTS PURGE";
 
@@ -367,7 +375,9 @@ public class Setup {
         "title VARCHAR2(255), " +
         // foreign keys
         "userId NUMBER NOT NULL, " +
-        "pid NUMBER NOT NULL )";
+        "pid NUMBER NOT NULL, " +
+        "CONSTRAINT fk9 FOREIGN KEY (userId) REFERENCES mngo1.Person(userId) ON DELETE CASCADE, " +
+        "CONSTRAINT fk10 FOREIGN KEY (pid) REFERENCES mngo1.Persona(pid) ON DELETE SET NULL)";
     public static final String ConversationDrop = 
         "DROP TABLE mngo1.Conversation CASCADE CONSTRAINTS PURGE";
 
@@ -432,9 +442,9 @@ public class Setup {
         "timestamp DATE, " + 
         "title VARCHAR(255), " +
         "CONSTRAINT m_pk PRIMARY KEY (mid, cid), " +
-        "CONSTRAINT fk_c FOREIGN KEY (cid) REFERENCES mngo1.Conversation(cid) ON DELETE SET NULL, " +
-        "CONSTRAINT check_sender CHECK(sender IN ('user', 'ai')), " +
-        "CONSTRAINT check_rating CHECK(rating IN (-1, 0, 1)))";
+        "CONSTRAINT fk11 FOREIGN KEY (cid) REFERENCES mngo1.Conversation(cid) ON DELETE CASCADE, " +
+        "CONSTRAINT chk5 CHECK(sender IN ('user', 'ai')), " +
+        "CONSTRAINT chk6 CHECK(rating IN (-1, 0, 1)))";
     public static final String MessageDrop = 
         "DROP TABLE mngo1.Message CASCADE CONSTRAINTS PURGE";
 
@@ -461,13 +471,14 @@ public class Setup {
     public static final String BookmarkTable =
         "CREATE TABLE mngo1.Bookmark (" + 
         "bid NUMBER NOT NULL, " +
+        // foreign key
         "mid NUMBER NOT NULL, " + 
         "cid NUMBER NOT NUll, " + 
-        // foreign key
         "userId NUMBER NOT NULL, " +
         // constraints
         "CONSTRAINT b_m PRIMARY KEY (mid, bid, cid), " +
-        "CONSTRAINT fk_m FOREIGN KEY (mid, cid) REFERENCES mngo1.Message(mid, cid) ON DELETE SET NULL) ";
+        "CONSTRAINT fk12 FOREIGN KEY (userId) REFERENCES mngo1.Person(userId) ON DELETE CASCADE, " +
+        "CONSTRAINT fk13 FOREIGN KEY (mid, cid) REFERENCES mngo1.Message(mid, cid) ON DELETE CASCADE) ";
     public static final String BookmarkDrop = 
         "DROP TABLE mngo1.Bookmark CASCADE CONSTRAINTS PURGE";
     
@@ -483,14 +494,16 @@ public class Setup {
      * members.
      * 
      * -- Fields --
-     * @field userId (CK)
-     * @field wid (CK)
+     * @field userId (CK) (FK)
+     * @field wid (CK) (FK)
      * 
      * -- Constraints --
      */
     public static final String UserWorkspaceTable =
         "CREATE TABLE mngo1.UserWorkspace (" + 
         "userId NUMBER NOT NULL, " +
+        "CONSTRAINT fk14 FOREIGN KEY (userId) REFERENCES mngo1.Person(userId) ON DELETE CASCADE, " +
+        "CONSTRAINT fk15 FOREIGN KEY (wid) REFERENCES mngo1.Workspace(wid) ON DELETE CASCADE, " +
         "wid NUMBER NOT NUll)";
     public static final String UserWorkspaceDrop = 
         "DROP TABLE mngo1.UserWorkspace CASCADE CONSTRAINTS PURGE";
@@ -510,7 +523,9 @@ public class Setup {
     public static final String UserPromptWorkspaceTable =
         "CREATE TABLE mngo1.UserPromptWorkspace (" + 
         "upid NUMBER NOT NULL, " +
-        "wid NUMBER NOT NULL)";
+        "wid NUMBER NOT NULL, " + 
+        "CONSTRAINT fk16 FOREIGN KEY (upid) REFERENCES mngo1.UserPrompt(upid) ON DELETE CASCADE, " +
+        "CONSTRAINT fk17 FOREIGN KEY (wid) REFERENCES mngo1.Workspace(wid) ON DELETE CASCADE)";
     public static final String UserPromptWorkspaceDrop = 
         "DROP TABLE mngo1.UserPromptWorkspace CASCADE CONSTRAINTS PURGE";
     
@@ -521,15 +536,17 @@ public class Setup {
      * multiple template prompts.
      * 
      * -- Fields --
-     * @field upid (CK)
+     * @field tpid (CK)
      * @field wid (CK)
      * 
      * -- Constraints --
      */
     public static final String TemplatePromptWorkspaceTable =
         "CREATE TABLE mngo1.TemplatePromptWorkspace (" + 
-        "upid NUMBER NOT NULL, " +
-        "wid NUMBER NOT NUll)";
+        "tpid NUMBER NOT NULL, " +
+        "wid NUMBER NOT NUll, " +
+        "CONSTRAINT fk18 FOREIGN KEY (tpid) REFERENCES mngo1.TemplatePrompt(tpid) ON DELETE CASCADE, " +
+        "CONSTRAINT fk19 FOREIGN KEY (wid) REFERENCES mngo1.Workspace(wid) ON DELETE CASCADE)";
     public static final String TemplatePromptWorkspaceDrop = 
         "DROP TABLE mngo1.TemplatePromptWorkspace CASCADE CONSTRAINTS PURGE";
 
@@ -547,8 +564,10 @@ public class Setup {
      */
     public static final String ConversationwWorkspaceTable =
         "CREATE TABLE mngo1.ConversationwWorkspace (" + 
-        "upid NUMBER NOT NULL, " +
-        "wid NUMBER NOT NUll)";
+        "cid NUMBER NOT NULL, " +
+        "wid NUMBER NOT NUll, " +
+        "CONSTRAINT fk20 FOREIGN KEY (cid) REFERENCES mngo1.Conversation(cid) ON DELETE CASCADE, " +
+        "CONSTRAINT fk21 FOREIGN KEY (wid) REFERENCES mngo1.Workspace(wid) ON DELETE CASCADE)";
     public static final String ConversationwWorkspaceDrop = 
         "DROP TABLE mngo1.ConversationwWorkspace CASCADE CONSTRAINTS PURGE";
 
@@ -566,12 +585,12 @@ public class Setup {
      */
     public static final String PromptCategoryUserPromptTable =
         "CREATE TABLE mngo1.PromptCategoryUserPrompt (" + 
-        "upid NUMBER NOT NULL, " +
-        "wid NUMBER NOT NUll)";
+        "pcid NUMBER NOT NULL, " +
+        "upid NUMBER NOT NUll, " + 
+        "CONSTRAINT fk22 FOREIGN KEY (pcid) REFERENCES mngo1.PromptCategory(pcid) ON DELETE CASCADE, " +
+        "CONSTRAINT fk23 FOREIGN KEY (upid) REFERENCES mngo1.UserPrompt(upid) ON DELETE CASCADE)";
     public static final String PromptCategoryUserPromptDrop = 
         "DROP TABLE mngo1.PromptCategoryUserPrompt CASCADE CONSTRAINTS PURGE";
-
-
 
     /**
      * These are all our triggers needed to automatically update/insert/delete data
@@ -581,28 +600,6 @@ public class Setup {
      * @trigger Deleting a user must fail if there are unpaid invoices or open support tickets.
      */
     public static final String UnpaidInvoiceTrigger = "";
-
-    /**
-     * @trigger Must automatically be created every month given the Membership of a user.
-     */
-    public static final String updateMembershipsTrigger = "";
-
-    /**
-     * @trigger Does not create an invoice if the user's Membership is tier 0.
-     */
-    public static final String noInvoiceTrigger = "";
-
-    /**
-     * @trigger When a user is deleted, their workspaces, conversations, bookmarks, messages,
-     *          and user prompts must also be deleted. All Many-to-Many relationship table
-     *          entries containing the workspace id must also be deleted:
-     *          ConversationWorkspace
-     *          TemplatePromptWorksapce
-     *          UserWorkspace
-     *          UserPromptWorkspace
-     *          Finally, any existing upid in other people's conversations must be NULL'ed
-     */
-    public static final String deleteUserTrigger = "";
     
     /**
      * @trigger When a user adds a UserPrompt or a Conversation, check that
@@ -610,25 +607,6 @@ public class Setup {
      *          UserWorkspace
      */
     public static final String unknownUserInWorkspaceTrigger = "";
-
-    /**
-     * @trigger when a workspace is deleted, all of its prompt categories are deleted.
-     *      Its link to Userprompts must also be deleted:
-     *          PromptCategoryUserPrompt
-     */
-    public static final String deleteWorkspaceTrigger = "";
-
-    /**
-     * @trigger when a conversation is deleted, all messages in that conversation is deleted.
-     *      Any references added to it through the workspace must be deleted:
-     *          ConversationWorkspace
-     */
-    public static final String deleteConversationTrigger = "";
-    
-    /**
-     * @trigger when a message is deleted, its bookmark must be deleted.
-     */
-    public static final String deleteMessageTrigger = "";
     
     /**
      * @trigger when a persona is 'ATTEMPTING' to be deleted, check that no more
@@ -649,11 +627,10 @@ public class Setup {
     };
 
     public static final String[] CreateTables = {
-        LanguageTable, PersonTable, BillingRecordTable, InvoiceTable,
-        MembershipTable, TicketTable, AgentTable, WorkspaceTable, TemplatePromptTable,
-        UserPromptTable, PromptCategoryTable, ConversationTable, PersonaTable,
-        MessageTable, BookmarkTable, UserPromptWorkspaceTable, TemplatePromptWorkspaceTable,
-        ConversationwWorkspaceTable, PromptCategoryUserPromptTable, UserWorkspaceTable
+        AgentTable, LanguageTable, MembershipTable, PersonaTable, TemplatePromptTable,
+        PersonTable, TicketTable, BillingRecordTable, InvoiceTable, ConversationTable, MessageTable,
+        BookmarkTable, WorkspaceTable, UserPromptTable, UserPromptWorkspaceTable,
+        ConversationwWorkspaceTable, PromptCategoryTable, PromptCategoryUserPromptTable,
+        TemplatePromptWorkspaceTable, UserWorkspaceTable
     };
-
 }
