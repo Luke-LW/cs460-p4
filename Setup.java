@@ -1,23 +1,34 @@
-/**
- * Setup.java
- * This sets up all the necessary tables in our database to run
- * our queries.
+/*
+ *         Names:   Minh Ngo 
+                    Luke Livesay-Wright
+                    Derek Hoshaw
+ *        Course:   CSC 460
+ *    Assignment:   Program 4
+ *    Instructor:   Lester McCann
+ *            TA:   James Shen, Muhammad Bilal
+ *      Due Date:   May 5th, 2026
+ *
+ *       Purpose:   Sets up all necessary tables in our database to run our queries.
  * 
+ *    Description:  <tablename>
+ *                  <description>
  * 
- * Each description follows:
+ *                  -- Fields --
+ *                    @field <field> [(PK) | (CK) | (FK)]
  * 
- * <tablename>
- * <description>
+ *                  -- Relationships -- (1-M, 1-1, M-M relationships)
+ *                      @relationship <tablename1> -- <relation> --> <tablename2>
  * 
- * -- Fields --
- * @field <field> [(PK) | (CK) | (FK)]
- * 
- * -- Relationships -- (1-M, 1-1, M-M relationships)
- * @relationship <tablename1> -- <relation> --> <tablename2>
- * 
- * -- Constraints --
- * @constraint <constraint>
+ *                  -- Constraints --
+ *                      @constraint <constraint>
+ *                  
+ *   Requirements:  Java 25 or earlier
+ *        Compile:  javac Setup.java
+ *         Usage:   java Setup 
+ *    Input Files:  None. 
  */
+
+
 public class Setup {
 
     // export CLASSPATH=/usr/lib/oracle/19.8/client64/lib/ojdbc8.jar:${CLASSPATH}

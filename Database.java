@@ -1,10 +1,24 @@
-/**
- * Minh Ngo
- * Database.java
- * This class is responsible for setting up the database that
- * we will be using for our project. It will create the tables and
- * insert some sample data into the tables.
+/*
+ *         Names:   Minh Ngo 
+                    Luke Livesay-Wright
+                    Derek Hoshaw
+ *        Course:   CSC 460
+ *    Assignment:   Program 4
+ *    Instructor:   Lester McCann
+ *            TA:   James Shen, Muhammad Bilal
+ *      Due Date:   May 5th, 2026
+ *
+ *       Purpose:   
+ * 
+ *    Description:  
+ *                  
+ * 
+ *   Requirements:  Java 25 or earlier
+ *        Compile:  javac Database.java
+ *         Usage:   java Database 
+ *    Input Files:  None. 
  */
+
 import java.sql.*;
 
 public class Database {
