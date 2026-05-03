@@ -46,10 +46,12 @@ public class Setup {
         "pwd VARCHAR2(255) NOT NULL, " +
         "email VARCHAR2(255) NOT NULL, " +
         // Foreign Key
-        "lid NUMBER NOT NULL)"
-        ;
+        "lid NUMBER NOT NULL, " +
+        "CONSTRAINT fk_l FOREIGN KEY (lid) REFERENCES mngo1.Language(lid), " +
+        "CONSTRAINT unique_email UNIQUE (email), " +
+        "CONSTRAINT unique_name UNIQUE (username))";
     public static final String PersonDrop = 
-        "DROP TABLE Person CASCADE CONSTRAINTS";
+        "DROP TABLE Person CASCADE CONSTRAINTS PURGE";
 
     /**
      * Language
@@ -71,7 +73,7 @@ public class Setup {
         "lid NUMBER PRIMARY KEY, " +
         "language VARCHAR2(255) )";
     public static final String LanguageDrop = 
-        "DROP TABLE mngo1.Language CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Language CASCADE CONSTRAINTS PURGE";
 
     /**
      * BillingRecord
@@ -98,9 +100,10 @@ public class Setup {
         "payaddress VARCHAR2(255), " +
         "paymethod VARCHAR2(255), " +
         // foreign key
-        "userId NUMBER NOT NULL)";
+        "userId NUMBER NOT NULL, " +
+        "CONSTRAINT check_paymethod CHECK (paymethod IN ('credit', 'debit', 'check', 'cash', 'other')))";
     public static final String BillingRecordDrop = 
-        "DROP TABLE mngo1.BillingRecord CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.BillingRecord CASCADE CONSTRAINTS PURGE";
 
     /**
      * Invoice
@@ -129,9 +132,10 @@ public class Setup {
         "amount NUMBER, " +
         "month DATE, " +
         // foreign key
-        "brid NUMBER NOT NULL)";
+        "brid NUMBER NOT NULL, " +
+        "CONSTRAINT check_status CHECK (status IN ('unpaid', 'paid')))";
     public static final String InvoiceDrop = 
-        "DROP TABLE mngo1.Invoice CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Invoice CASCADE CONSTRAINTS PURGE";
     
     /**
      * Membership
@@ -144,7 +148,7 @@ public class Setup {
      * @field mtid (PK)
      * @field hasPro
      * @field tier
-     * @field limit
+     * @field messageLimit
      * 
      * -- Relationships --
      * @relationship Membership -- 0+ --> Person
@@ -156,11 +160,12 @@ public class Setup {
     public static final String MembershipTable =
         "CREATE TABLE mngo1.Membership (" + 
         "mtid NUMBER PRIMARY KEY, " +
-        "hasPro NUMBER, " +
-        "tier NUMBER, " +
-        "limit NUMBER )";
+        "hasPro NUMBER NOT NULL, " +
+        "tier NUMBER NOT NULL, " +
+        "messageLimit NUMBER NOT NULL, " +
+        "CONSTRAINT check_hasPro CHECK (hasPro IN (0, 1)))";
     public static final String MembershipDrop = 
-        "DROP TABLE mngo1.Membership CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Membership CASCADE CONSTRAINTS PURGE";
 
     /**
      * Ticket
@@ -193,10 +198,12 @@ public class Setup {
         "outcome VARCHAR2(255), " +
         "topic VARCHAR2(255), " + 
         // foreign keys
-        "userId NUMBER NOT NULL" +
-        "aid NUMBER)";
+        "userId NUMBER NOT NULL, " +
+        "aid NUMBER, " +
+        "CONSTRAINT fk_u FOREIGN KEY (userId) REFERENCES mngo1.Person(userId), " +
+        "CONSTRAINT check_outcome CHECK (outcome IN ('Resolved', 'Escalated', 'Waiting')))";
     public static final String TicketDrop = 
-        "DROP TABLE mngo1.Ticket CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Ticket CASCADE CONSTRAINTS PURGE";
     
     /**
      * Agent
@@ -218,7 +225,7 @@ public class Setup {
         "aid NUMBER PRIMARY KEY, " +
         "name VARCHAR2(255))";
     public static final String AgentDrop = 
-        "DROP TABLE mngo1.Agent CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Agent CASCADE CONSTRAINTS PURGE";
 
     /**
      * Workspace
@@ -250,7 +257,7 @@ public class Setup {
         "wid NUMBER PRIMARY KEY, " +
         "privacy VARCHAR(255) NOT NULL )";
     public static final String WorkspaceDrop =
-        "DROP TABLE mngo1.Workspace CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Workspace CASCADE CONSTRAINTS PURGE";
 
     /**
      * TemplatePrompt
@@ -273,7 +280,7 @@ public class Setup {
         "tpid NUMBER PRIMARY KEY, " +
         "prompt VARCHAR(255) NOT NULL )";
     public static final String TemplatePromptDrop =
-        "DROP TABLE mngo1.TemplatePrompt CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.TemplatePrompt CASCADE CONSTRAINTS PURGE";
 
     /**
      * UserPrompt
@@ -300,9 +307,9 @@ public class Setup {
         "instructions VARCHAR(255) NOT NULL, " +
         "privacy VARCHAR(255) NOT NULL, " +
         // foreign key
-        "userId NUMBER NOT NULL";
+        "userId NUMBER NOT NULL)";
     public static final String UserPromptDrop = 
-        "DROP TABLE mngo1.UserPrompt CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.UserPrompt CASCADE CONSTRAINTS PURGE";
 
     /**
      * PromptCategory
@@ -329,7 +336,7 @@ public class Setup {
         "pcid NUMBER PRIMARY KEY, " +
         "categoryname VARCHAR(255) NOT NULL )";
     public static final String PromptCategoryDrop = 
-        "DROP TABLE mngo1.PromptCategory CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.PromptCategory CASCADE CONSTRAINTS PURGE";
 
     /**
      * Conversation
@@ -362,7 +369,7 @@ public class Setup {
         "userId NUMBER NOT NULL, " +
         "pid NUMBER NOT NULL )";
     public static final String ConversationDrop = 
-        "DROP TABLE mngo1.Conversation CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Conversation CASCADE CONSTRAINTS PURGE";
 
     /**
      * Persona
@@ -387,7 +394,7 @@ public class Setup {
         "name VARCHAR2(255), " +
         "personality VARCHAR2(255) )";
     public static final String PersonaDrop = 
-        "DROP TABLE mngo1.Persona CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Persona CASCADE CONSTRAINTS PURGE";
 
     /**
      * Message
@@ -425,9 +432,11 @@ public class Setup {
         "timestamp DATE, " + 
         "title VARCHAR(255), " +
         "CONSTRAINT m_pk PRIMARY KEY (mid, cid), " +
-        "CONSTRAINT fk_c FOREIGN KEY (cid)\nREFERENCES mngo1.Conversation(cid) ON DELETE SET NULL)";
+        "CONSTRAINT fk_c FOREIGN KEY (cid) REFERENCES mngo1.Conversation(cid) ON DELETE SET NULL, " +
+        "CONSTRAINT check_sender CHECK(sender IN ('user', 'ai')), " +
+        "CONSTRAINT check_rating CHECK(rating IN (-1, 0, 1)))";
     public static final String MessageDrop = 
-        "DROP TABLE mngo1.Message CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Message CASCADE CONSTRAINTS PURGE";
 
     /**
      * Bookmark
@@ -458,9 +467,9 @@ public class Setup {
         "userId NUMBER NOT NULL, " +
         // constraints
         "CONSTRAINT b_m PRIMARY KEY (mid, bid, cid), " +
-        "CONSTRAINT fk_m FOREIGN KEY (mid, cid)\nREFERENCES mngo1.Message(mid, cid) ON DELETE SET NULL) ";
+        "CONSTRAINT fk_m FOREIGN KEY (mid, cid) REFERENCES mngo1.Message(mid, cid) ON DELETE SET NULL) ";
     public static final String BookmarkDrop = 
-        "DROP TABLE mngo1.Bookmark CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.Bookmark CASCADE CONSTRAINTS PURGE";
     
     /**
      * These are special tables meant to properly manage
@@ -484,7 +493,7 @@ public class Setup {
         "userId NUMBER NOT NULL, " +
         "wid NUMBER NOT NUll)";
     public static final String UserWorkspaceDrop = 
-        "DROP TABLE mngo1.UserWorkspace CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.UserWorkspace CASCADE CONSTRAINTS PURGE";
 
     /**
      * UserPromptWorkspace
@@ -501,9 +510,9 @@ public class Setup {
     public static final String UserPromptWorkspaceTable =
         "CREATE TABLE mngo1.UserPromptWorkspace (" + 
         "upid NUMBER NOT NULL, " +
-        "wid NUMBER NOT NUll)";
+        "wid NUMBER NOT NULL)";
     public static final String UserPromptWorkspaceDrop = 
-        "DROP TABLE mngo1.UserPromptWorkspace CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.UserPromptWorkspace CASCADE CONSTRAINTS PURGE";
     
     /**
      * TemplatePromptWorkspace
@@ -522,7 +531,7 @@ public class Setup {
         "upid NUMBER NOT NULL, " +
         "wid NUMBER NOT NUll)";
     public static final String TemplatePromptWorkspaceDrop = 
-        "DROP TABLE mngo1.TemplatePromptWorkspace CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.TemplatePromptWorkspace CASCADE CONSTRAINTS PURGE";
 
     /**
      * ConversationWorksapce
@@ -541,7 +550,7 @@ public class Setup {
         "upid NUMBER NOT NULL, " +
         "wid NUMBER NOT NUll)";
     public static final String ConversationwWorkspaceDrop = 
-        "DROP TABLE mngo1.ConversationwWorkspace CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.ConversationwWorkspace CASCADE CONSTRAINTS PURGE";
 
     /**
      * PromptCategoryUserPrompt
@@ -560,7 +569,7 @@ public class Setup {
         "upid NUMBER NOT NULL, " +
         "wid NUMBER NOT NUll)";
     public static final String PromptCategoryUserPromptDrop = 
-        "DROP TABLE mngo1.PromptCategoryUserPrompt CASCADE CONSTRAINTS";
+        "DROP TABLE mngo1.PromptCategoryUserPrompt CASCADE CONSTRAINTS PURGE";
 
 
 
@@ -631,5 +640,20 @@ public class Setup {
     
 
 
+    public static final String[] DropTables = {
+        PersonDrop, LanguageDrop, BillingRecordDrop, InvoiceDrop,
+        MembershipDrop, TicketDrop, AgentDrop, WorkspaceDrop, TemplatePromptDrop,
+        UserPromptDrop, PromptCategoryDrop, ConversationDrop, PersonaDrop,
+        MessageDrop, BookmarkDrop, UserWorkspaceDrop, TemplatePromptWorkspaceDrop,
+        ConversationwWorkspaceDrop, PromptCategoryUserPromptDrop, UserPromptWorkspaceDrop
+    };
+
+    public static final String[] CreateTables = {
+        LanguageTable, PersonTable, BillingRecordTable, InvoiceTable,
+        MembershipTable, TicketTable, AgentTable, WorkspaceTable, TemplatePromptTable,
+        UserPromptTable, PromptCategoryTable, ConversationTable, PersonaTable,
+        MessageTable, BookmarkTable, UserPromptWorkspaceTable, TemplatePromptWorkspaceTable,
+        ConversationwWorkspaceTable, PromptCategoryUserPromptTable, UserWorkspaceTable
+    };
 
 }

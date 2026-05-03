@@ -30,68 +30,28 @@ public class Database {
             return;
         }
         // remove the tables if they already exist
-        
-        try {
-            System.out.println("Dropping tables...");
-            Statement stmt = dbconn.createStatement();
-            stmt.executeUpdate(Setup.PersonDrop);
-            stmt.executeUpdate(Setup.LanguageDrop);
-            stmt.executeUpdate(Setup.BillingRecordDrop);
-            stmt.executeUpdate(Setup.InvoiceDrop);
-            stmt.executeUpdate(Setup.MembershipDrop);
-            stmt.executeUpdate(Setup.TicketDrop);
-            stmt.executeUpdate(Setup.AgentDrop);
-            stmt.executeUpdate(Setup.ConversationDrop);
-            stmt.executeUpdate(Setup.PersonaDrop);
-            stmt.executeUpdate(Setup.MessageDrop);
-            stmt.executeUpdate(Setup.BookmarkDrop);
-            stmt.executeUpdate(Setup.WorkspaceDrop);
-            stmt.executeUpdate(Setup.TemplatePromptDrop);
-            stmt.executeUpdate(Setup.UserPromptDrop);
-            stmt.executeUpdate(Setup.PromptCategoryDrop);
+        System.out.println("Dropping tables...");
 
-            stmt.executeUpdate(Setup.UserWorkspaceDrop);
-            stmt.executeUpdate(Setup.UserPromptWorkspaceDrop);
-            stmt.executeUpdate(Setup.TemplatePromptWorkspaceDrop);
-            stmt.executeUpdate(Setup.ConversationwWorkspaceDrop);
-            stmt.executeUpdate(Setup.PromptCategoryUserPromptDrop);
-            // commit
-            stmt.executeUpdate("COMMIT");
-        } catch (SQLException e) {
-            // do nothing
+        for (String query : Setup.DropTables) {
+            try {
+                Statement stmt = dbconn.createStatement();
+                stmt.executeUpdate(query);
+            } catch (SQLException e) {
+                System.out.println(query);
+                System.out.println(e);
+            }
         }
 
         // create the tables
-        try {
-            System.out.println("Creating tables...");
-            Statement stmt = dbconn.createStatement();
-            stmt.executeUpdate(Setup.PersonTable);
-            stmt.executeUpdate(Setup.LanguageTable);
-            stmt.executeUpdate(Setup.BillingRecordTable);
-            stmt.executeUpdate(Setup.InvoiceTable);
-            stmt.executeUpdate(Setup.MembershipTable);
-            stmt.executeUpdate(Setup.TicketTable);
-            stmt.executeUpdate(Setup.AgentTable);
-            stmt.executeUpdate(Setup.ConversationTable);
-            stmt.executeUpdate(Setup.PersonaTable);
-            stmt.executeUpdate(Setup.MessageTable);
-            stmt.executeUpdate(Setup.BookmarkTable);
-            stmt.executeUpdate(Setup.WorkspaceTable);
-            stmt.executeUpdate(Setup.TemplatePromptTable);
-            stmt.executeUpdate(Setup.UserPromptTable);
-            stmt.executeUpdate(Setup.PromptCategoryTable);
-
-            stmt.executeUpdate(Setup.UserWorkspaceTable);
-            stmt.executeUpdate(Setup.UserPromptWorkspaceTable);
-            stmt.executeUpdate(Setup.TemplatePromptWorkspaceTable);
-            stmt.executeUpdate(Setup.ConversationwWorkspaceTable);
-            stmt.executeUpdate(Setup.PromptCategoryUserPromptTable);
-            // commit
-            stmt.executeUpdate("COMMIT");
-        } catch (SQLException e) {
-            System.out.println("Error creating tables");
-            e.printStackTrace();
-            return;
+        System.out.println("Creating tables...");
+        for (String query : Setup.CreateTables) {
+            try {
+                Statement stmt = dbconn.createStatement();
+                stmt.executeUpdate(query);
+            } catch (SQLException e) {
+                System.out.println(query);
+                System.out.println(e);
+            }
         }
     }
 
