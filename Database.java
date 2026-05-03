@@ -49,6 +49,12 @@ public class Database {
             stmt.executeUpdate(Setup.TemplatePromptDrop);
             stmt.executeUpdate(Setup.UserPromptDrop);
             stmt.executeUpdate(Setup.PromptCategoryDrop);
+
+            stmt.executeUpdate(Setup.UserWorkspaceDrop);
+            stmt.executeUpdate(Setup.UserPromptWorkspaceDrop);
+            stmt.executeUpdate(Setup.TemplatePromptWorkspaceDrop);
+            stmt.executeUpdate(Setup.ConversationwWorkspaceDrop);
+            stmt.executeUpdate(Setup.PromptCategoryUserPromptDrop);
             // commit
             stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
@@ -74,6 +80,12 @@ public class Database {
             stmt.executeUpdate(Setup.TemplatePromptTable);
             stmt.executeUpdate(Setup.UserPromptTable);
             stmt.executeUpdate(Setup.PromptCategoryTable);
+
+            stmt.executeUpdate(Setup.UserWorkspaceTable);
+            stmt.executeUpdate(Setup.UserPromptWorkspaceTable);
+            stmt.executeUpdate(Setup.TemplatePromptWorkspaceTable);
+            stmt.executeUpdate(Setup.ConversationwWorkspaceTable);
+            stmt.executeUpdate(Setup.PromptCategoryUserPromptTable);
             // commit
             stmt.executeUpdate("COMMIT");
         } catch (SQLException e) {
@@ -81,90 +93,6 @@ public class Database {
             e.printStackTrace();
             return;
         }
-
-        try {
-            System.out.println("Creating Triggers...");
-            Statement stmt = dbconn.createStatement();
-            stmt.executeUpdate(Setup.PersonTrigger);
-            stmt.executeUpdate(Setup.LanguageTrigger);
-            stmt.executeUpdate(Setup.BillingRecordTrigger);
-            stmt.executeUpdate(Setup.InvoiceTrigger);
-            stmt.executeUpdate(Setup.MembershipTrigger);
-            stmt.executeUpdate(Setup.TicketTrigger);
-            stmt.executeUpdate(Setup.AgentTrigger);
-            stmt.executeUpdate(Setup.ConversationTrigger);
-            stmt.executeUpdate(Setup.PersonaTrigger);
-            stmt.executeUpdate(Setup.MessageTrigger);
-            stmt.executeUpdate(Setup.BookmarkTrigger);
-
-            stmt.executeUpdate(Setup.WorkspaceTrigger);
-            stmt.executeUpdate(Setup.TemplatePromptTrigger);
-            stmt.executeUpdate(Setup.UserPromptTrigger);
-            stmt.executeUpdate(Setup.PromptCategoryTrigger);
-            // commit
-            stmt.executeUpdate("COMMIT");
-        } catch (SQLException e) {
-            System.out.println("Error creating triggers");
-            e.printStackTrace();
-            return;
-        }
-
-        // create sample data
-        try {
-            System.out.println("Creating Sample Data...");
-            Statement stmt = dbconn.createStatement();
-            for (String query: Setup.PersonData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.LanguageData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.BillingRecordData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.InvoiceData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.MembershipData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.TicketData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.AgentData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.ConversationData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.PersonaData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.MessageData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.BookmarkData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.WorkspaceData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.TemplatePromptData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.UserPromptData) {
-                stmt.executeUpdate(query);
-            }
-            for (String query: Setup.PromptCategoryData) {
-                stmt.executeUpdate(query);
-            }
-            // commit
-            stmt.executeUpdate("COMMIT");
-        } catch (SQLException e) {
-            System.out.println("Error creating sample data");
-            e.printStackTrace();
-        }
-
     }
 
 
