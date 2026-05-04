@@ -361,7 +361,7 @@ public class Interface {
                         String idQuery = "SELECT MAX(userId) FROM mngo1.Person";
                         int newId = getNextId(idQuery, dbconn);
                         // format and execute the SQL statement to add a user account with the provided information
-                        statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', 50, %d, 1)", newId, username, password, email, lid);
+                        statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', 50, %d, 4)", newId, username, password, email, lid);
                         executeStmt(statement, dbconn);
                         System.out.println("User account created successfully.");
                     }
@@ -392,19 +392,44 @@ public class Interface {
                 case 3: // Delete user account
                     // Similar to update user account, we need to get all users 
                     query = "SELECT * FROM mngo1.Person";
-                    System.out.println(query);
                     count = executeQuery(query, dbconn, Entity.USER);
                     if (count == 0)
                         System.err.println("There are no users to select.");
                     else {
                         // If the user exists , call helper method to prompt user for specific user to delete
                         int userId = promptUserForInt(selectUserForDeletePrompt, keyboard, dbconn, Entity.USER);
-                        statement = String.format("DELETE FROM mngo1.Person WHERE userId = %d", userId);
-                        executeStmt(statement, dbconn);
-                        System.out.println("User account deleted successfully.");
+                        // Check for unpaid invoices before deleting
+                        String unpaidCheck = String.format(
+                            "SELECT COUNT(*) FROM mngo1.Invoice i " +
+                            "WHERE i.status = 'unpaid' " +
+                            "AND i.brid IN (SELECT brid FROM mngo1.BillingRecord WHERE userId = %d)", userId);
+                        // Check for open support tickets before deleting
+                        String ticketCheck = String.format(
+                            "SELECT COUNT(*) FROM mngo1.Ticket " +
+                            "WHERE userId = %d AND outcome = 'Waiting'", userId);
+                        try {
+                            Statement unpaidStmt = dbconn.createStatement();
+                            ResultSet unpaidRs = unpaidStmt.executeQuery(unpaidCheck);
+                            unpaidRs.next();
+                            int unpaidCount = unpaidRs.getInt(1);
+ 
+                            Statement ticketStmt = dbconn.createStatement();
+                            ResultSet ticketRs = ticketStmt.executeQuery(ticketCheck);
+                            ticketRs.next();
+                            int openTicketCount = ticketRs.getInt(1);
+ 
+                            if (unpaidCount > 0 || openTicketCount > 0) {
+                                System.err.println("Cannot delete user: has unpaid invoices or open support tickets.");
+                            } else {
+                                statement = String.format("DELETE FROM mngo1.Person WHERE userId = %d", userId);
+                                executeStmt(statement, dbconn);
+                                System.out.println("User account deleted successfully.");
+                            }
+                        } catch (SQLException e) {
+                            System.err.println("Error checking user before deletion: " + e);
+                        }
                     }
                     return;
-
                 case 4: // back to main menu
                     return;
             

@@ -754,39 +754,6 @@ public class Setup {
      * These are all our triggers needed to automatically update/insert/delete data
      */
 
-    /**
-     * @trigger Deleting a user must fail if there are unpaid invoices or open support tickets.
-     */
-    public static final String UnpaidInvoiceTrigger = 
-        // Trigger before delete on a user
-        "CREATE OR REPLACE TRIGGER mngo1.prevent_user_delete " +
-        "BEFORE DELETE ON mngo1.Person " +
-        "FOR EACH ROW " +
-        // For each user being deleted, declare variables to count unpaid invoices and open tickets
-        "DECLARE " +
-        "   unpaid_count NUMBER; " +
-        "   open_ticket_count NUMBER; " +
-        // Begin the trigger
-        "BEGIN " +
-            // Check for unpaid invoices by joining the Invoice and BillingRecord tables
-        "   SELECT COUNT(*) INTO unpaid_count " +
-        "   FROM mngo1.Invoice i " +
-        "   JOIN mngo1.BillingRecord b ON i.brid = b.brid " +
-        "   WHERE b.userId = :OLD.userId " +
-        "   AND i.status = 'unpaid'; " +
-        "" +
-            // Check for open support tickets in the Ticket table
-        "   SELECT COUNT(*) INTO open_ticket_count " +
-        "   FROM mngo1.Ticket " +
-        "   WHERE userId = :OLD.userId " +
-        "   AND outcome = 'Waiting'; " +
-        "" +
-            // If there are any unpaid invoices or open tickets, raise an error to prevent deletion
-        "   IF unpaid_count > 0 OR open_ticket_count > 0 THEN " +
-        "       RAISE_APPLICATION_ERROR(-20001, " +
-        "       'Cannot delete user: has unpaid invoices or open support tickets.'); " +
-        "   END IF; " +
-        "END;";
     
     /**
      * @trigger When a user adds a UserPrompt, check that
@@ -883,7 +850,6 @@ public class Setup {
     };
 
     public static final String[] CreateTriggers = {
-        UnpaidInvoiceTrigger,
         unknownUserPromptInWorkspaceTrigger,
         unknownConversationInWorkspaceTrigger,
         deletePersonaTrigger
