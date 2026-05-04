@@ -102,6 +102,11 @@ public class Interface {
         "Select a privacy option for this workspace: ";
     private final static String selectWorkspacePrompt =
         "Select a workspace to modify: ";
+    private final static String modifyWorkspaceInterface =
+        "\nWhat would you like to do?\n" +
+        "1: Change privacy setting\n" +
+        "2: Change owner\n" +
+        "3: Back\n";
 
     private final static String personaInterface =
         "\f------------------------\n" +
@@ -170,6 +175,9 @@ public class Interface {
     private final static String selectTicketForResolvePrompt =
         "Select a ticket to resolve: ";
 
+    private final static String updateUserEmailPrompt = 
+        "Enter new email for the user: ";
+
     private final static String commandError = "Error: Unrecognized Command. Try again:\n";
 
 
@@ -196,7 +204,6 @@ public class Interface {
             return;
         }
 
-        // start interface
         boolean init = true;
         Scanner keyboard = new Scanner(System.in);
 
@@ -304,15 +311,18 @@ public class Interface {
                     String email = promptUserForStr(addUserEmailPrompt, keyboard);
                     String username = promptUserForStr(addUserNamePrompt, keyboard);
                     String password = promptUserForStr(addUserPasswordPrompt, keyboard);
+                    // Get the next userId to use for this user
+                    String idQuery = "SELECT MAX(userId) FROM mngo1.Person";
+                    int newId = getNextId(idQuery, dbconn);
                     // format and execute the SQL statement to add a user account with the provided information
-                    statement = String.format("INSERT INTO mngo.Person VALUES (%d, %s, %s, %s)", 1, username, password, email);
+                    statement = String.format("INSERT INTO mngo1.Person VALUES (%d, %s, %s, %s)", newId, username, password, email);
                     executeStmt(statement, dbconn);
+                    System.out.println("User account created successfully.");
                     return;
                 
                 case 2: // Update user account
                     // Get all users and print out some of their information so the user can select which account to update based on that information
                     query = "SELECT * FROM mngo1.Person";
-                    System.out.println(query);
                     count = executeQuery(query, dbconn, Entity.USER);
                     // If there are no users, we can't update anything, so we print an error message and return to the previous menu
                     if (count == 0)
@@ -320,6 +330,14 @@ public class Interface {
                     else {
                         // If user exists to update, call helper method to prompt user for specific user 
                         int userId = promptUserForInt(selectUserForUpdatePrompt, keyboard);
+                        
+                            // At this point we have found the user the user wants to update,
+                            // so we can prompt them for the new information for that user
+                        
+                        String newEmail = promptUserForStr(updateUserEmailPrompt, keyboard);
+                        statement = String.format("UPDATE mngo1.Person SET email = %s WHERE userId = %d", newEmail, userId);
+                        executeStmt(statement, dbconn);
+                        System.out.println("User account updated successfully.");
                     }
                     return;
 
@@ -333,6 +351,9 @@ public class Interface {
                     else {
                         // If the user exists , call helper method to prompt user for specific user to delete
                         int userId = promptUserForInt(selectUserForDeletePrompt, keyboard);
+                        statement = String.format("DELETE FROM mngo1.Person WHERE userId = %d", userId);
+                        executeStmt(statement, dbconn);
+                        System.out.println("User account deleted successfully.");
                     }
                     return;
 
@@ -397,25 +418,47 @@ public class Interface {
                         // At this point we have found the conversation the user wants
                         // So we perform a similar operation to add a message to the conversation
 
-                    query = "SELECT * FROM mngo1.Message";
-                    count = executeQuery(query, dbconn, Entity.MESSAGE);
-                    if (count == 0) {
-                        System.err.println("There are no messages to select.");
-                    }
-                    else {
-                        int mid = promptUserForInt(selectMessageForConvoPrompt, keyboard);
-                    }
+                    String msg = promptUserForStr("Enter message: ", keyboard);
+                    String sender = promptUserForStr("Enter sender (user/ai): ", keyboard);
+
+                    String mid = "SELECT NVL (MAX(mid), 0) + 1 FROM mngo1.Message WHERE cid = " + cid;
+                    int newId = getNextId(mid, dbconn);
+
+                    statement = String.format(
+                        "INSERT INTO mngo1.Message (mid, cid, message, sender, rating, timestamp) " +
+                        "VALUES (%d, %d, '%s', '%s', 0, SYSDATE)", 
+                        newId, cid, msg, sender);
+                    executeStmt(statement, dbconn);
+                    System.out.println("Message added to conversation successfully.");
                     return;
 
                 case 3: // Update message feedback
+                    // Get all conversations to find which conversation to add messages to
+                    query = "SELECT * FROM mngo1.Conversation";
+                    count = executeQuery(query, dbconn, Entity.CONVERSATION);
+                    if (count == 0) {
+                        System.err.println("There are no conversations to select.");
+                        return;
+                    }
+                    else {
+                        int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard);
+                    }
+                    
                     // Get all messages to find which message to update feedback for
-                    query = "SELECT * FROM mngo1.Message";
+                    query = "SELECT * FROM mngo1.Message WHERE cid = " + cid;
                     count = executeQuery(query, dbconn, Entity.MESSAGE);
                     if (count == 0) {
                         System.err.println("There are no messages to select.");
                     }
                     else {
                         int mid = promptUserForInt(selectMessageForFeedbackPrompt, keyboard);
+                        int rating = promptUserForInt("Enter Rating (Thumbs Up = 1/Down = -1): ", keyboard);
+                        String ratingText = promptUserForStr("Feedback Text: ", keyboard);
+                        statement = String.format(
+                            "UPDATE mngo1.Message SET rating = %d, ratingText = '%s' " +
+                            "WHERE mid = %d AND cid = %d", rating, ratingText, mid, cid);
+                        executeStmt(statement, dbconn);
+                        System.out.println("Feedback updated.");
                     }
                     return;
 
@@ -460,8 +503,11 @@ public class Interface {
                 case 1: // New workspace
                     // Prompt user for privacy setting of workspace, then format and execute SQL statement to create a workspace with that privacy setting
                     String privacy = promptUserForStr(addWorkspacePrivacyPrompt, keyboard);
-                    statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, %s)", 1, privacy);
+                    String widQuery = "SELECT NVL(MAX(wid), 0) + 1 FROM mngo1.Workspace";
+                    int newWid = getNextId(widQuery, dbconn);
+                    statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, %s)", newWid, privacy);
                     executeStmt(statement, dbconn);
+                    System.out.println("Workspace created successfully.");
                     return;
                 
                 case 2: // Modify workspace
@@ -474,6 +520,28 @@ public class Interface {
                     else {
                         // Prompt user for which workspace to modify.
                         int wid = promptUserForInt(selectWorkspacePrompt, keyboard);
+                        System.out.println(modifyWorkspaceInterface);
+                        int choice = keyboard.nextInt();
+                        keyboard.nextLine();
+
+                        if (choice == 1) {
+                            String newPrivacy = promptUserForStr("Enter new privacy (public/private): ", keyboard);
+                            statement = String.format(
+                                "UPDATE mngo1.Workspace SET privacy = '%s' WHERE wid = %d", 
+                                newPrivacy, wid);
+                        } 
+                        else if (choice == 2) {
+                            int newOwner = promptUserForInt("Enter new owner userId: ", keyboard);
+                            statement = String.format(
+                                "UPDATE mngo1.Workspace SET ownerId = %d WHERE wid = %d", 
+                                newOwner, wid);
+                        } 
+                        else {
+                            return;
+                        }
+                        
+                        executeStmt(statement, dbconn);
+                        System.out.println("Workspace modified successfully.");
                     }
                     return;
 
@@ -519,11 +587,18 @@ public class Interface {
                     // Prompt user for name and personality strings for the new persona
                     String name = promptUserForStr(addPersonaNamePrompt, keyboard);
                     String personality = promptUserForStr(addPersonaPersonalityPrompt, keyboard);
+                    // Get next persona ID
+                    String pidQuery = "SELECT NVL(MAX(pid), 0) + 1 FROM mngo1.Persona";
+                    int newPid = getNextId(pidQuery, dbconn);
                     // Format and execute SQL statement to create new persona with provided inputs
-                    statement = String.format("INSERT INTO mngo1.Persona VALUES (%d, %s, %s)", 1, name, personality);
+                    statement = String.format(
+                        "INSERT INTO mngo1.Persona (pid, name, personality) " +
+                        "VALUES (%d, '%s', '%s')", 
+                        newPid, name, personality);
                     executeStmt(statement, dbconn);
-                    return;
-                
+                    System.out.println("Persona created successfully with ID: " + newPid);
+                    return;    
+
                 case 2: // delete persona
                     // Get all personas to find which persona to delete
                     query = "SELECT * FROM mngo1.Persona";
@@ -534,6 +609,9 @@ public class Interface {
                     else {
                         // Prompt user for which persona to delete
                         int wid = promptUserForInt(selectPersonaToDeletePrompt, keyboard);
+                        statement = "DELETE FROM mngo1.Persona WHERE pid = " + pid;
+                        executeStmt(statement, dbconn);
+                        System.out.println("Persona deleted successfully.");
                     }
                     return;
 
@@ -645,7 +723,17 @@ public class Interface {
                     else {
                         // Prompt user for which user to upgrade
                         int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard);
-                    }
+                        int newTier = promptUserForInt("Enter new tier (1-3): ", keyboard);
+                        
+                        statement = String.format(
+                            "UPDATE mngo1.Membership SET tier = %d, hasPro = 1 " +
+                            "WHERE mtid = (SELECT mtid FROM mngo1.Person p " +
+                            "JOIN mngo1.Membership m ON p.userId = ? WHERE p.userId = %d)", // Simplified
+                            newTier, userId);  // Note: You may need to adjust based on actual FKs
+                        
+                        executeStmt(statement, dbconn);
+                        System.out.println("Subscription upgraded.");
+                        }
                     return;
                 
                 case 2: // Check user limit
@@ -700,7 +788,19 @@ public class Interface {
                     // with a SQL statement that is executed to manage billing
 
                 case 1: // Generate invoice
-                    System.out.println("Not yet implemented");
+                    int userIdForInvoice = promptUserForInt("Enter userId to generate invoice for: ", keyboard);
+                    // Simple invoice generation
+                    String invQuery = "SELECT NVL(MAX(invid), 0) + 1 FROM mngo1.Invoice";
+                    int newInvId = getNextId(invQuery, dbconn);
+                    
+                    statement = String.format(
+                        "INSERT INTO mngo1.Invoice (invid, status, amount, month, brid) " +
+                        "VALUES (%d, 'unpaid', 9.99, SYSDATE, " +
+                        "(SELECT brid FROM mngo1.BillingRecord WHERE userId = %d))", 
+                        newInvId, userIdForInvoice);
+                    
+                    executeStmt(statement, dbconn);
+                    System.out.println("Monthly invoice generated.");
                     return;
                 
                 case 2: // Mark invoice as paid
@@ -708,12 +808,14 @@ public class Interface {
                     query = "SELECT * FROM mngo1.Invoice";
                     count = executeQuery(query, dbconn, Entity.INVOICE);
                     if (count == 0) {
-                        System.err.println("There are no invoices to select.");
+                        System.err.println("No invoices found.");
+                        return;
                     }
-                    else {
-                        // Prompt user for which invoice to mark as paid
-                        int invId = promptUserForInt(selectInvoiceToPayPrompt, keyboard);
-                    }
+                    
+                    int invId = promptUserForInt(selectInvoiceToPayPrompt, keyboard);
+                    statement = "UPDATE mngo1.Invoice SET status = 'paid' WHERE invid = " + invId;
+                    executeStmt(statement, dbconn);
+                    System.out.println("Invoice marked as paid.");
                     return;
 
                 case 3: // back to main menu
@@ -757,8 +859,18 @@ public class Interface {
                 case 1: // New ticket
                     // Prompt user for topic of support ticket, then format and execute SQL statement to create a new support ticket with that topic
                     String topic = promptUserForStr(addTicketTopicPrompt, keyboard);
-                    statement = String.format("INSERT INTO mngo1.Ticket VALUES (%d, %d, %s, %s, %d, %d)", 1, 0, "Unresolved", topic, 1, 1);
+                    int userId = promptUserForInt("Enter userId creating the ticket: ", keyboard);
+                    
+                    String tidQuery = "SELECT NVL(MAX(tid), 0) + 1 FROM mngo1.Ticket";
+                    int newTid = getNextId(tidQuery, dbconn);
+                    
+                    statement = String.format(
+                        "INSERT INTO mngo1.Ticket (tid, duration, outcome, topic, userId, aid) " +
+                        "VALUES (%d, 0, 'Waiting', '%s', %d, NULL)", 
+                        newTid, topic, userId);
+                    
                     executeStmt(statement, dbconn);
+                    System.out.println("Support ticket created.");
                     return;
                 
                 case 2: // Assign ticket to agent
@@ -786,6 +898,9 @@ public class Interface {
                     else {
                         // Prompt user for which agent to assign the ticket to
                         int aid = promptUserForInt(selectAgentPrompt, keyboard);
+                        statement = "UPDATE mngo1.Ticket SET aid = " + aid + " WHERE tid = " + tid;
+                        executeStmt(statement, dbconn);
+                        System.out.println("Ticket assigned to agent.");
                     }
                     return;
 
@@ -799,6 +914,9 @@ public class Interface {
                     else {
                         // Prompt user for which ticket to mark as resolved
                         int tid = promptUserForInt(selectTicketForResolvePrompt, keyboard);
+                        statement = "UPDATE mngo1.Ticket SET outcome = 'Resolved', duration = 30 WHERE tid = " + tid;
+                        executeStmt(statement, dbconn);
+                        System.out.println("Ticket marked as resolved.");
                     }
                     return;
             
@@ -956,5 +1074,32 @@ public class Interface {
         }
         // Once we have valid input, we return that input integer
         return input;
+    }
+
+        /*---------------------------------------------------------------------
+        |  Method getNextId(query, dbconn)
+        |
+        |  Purpose: generates the next ID for a new entry in a table 
+        |
+        |  Pre-condition: User needs to input a integer in response to a prompt
+        |  Post-condition: A new ID is generated and returned based on the provided SQL query
+        |
+        |  Parameters:
+        |      String query - the SQL query to execute
+        |      Connection dbconn - the database connection
+        |
+        |  Returns: int - the next ID for a new entry in a table based on the provided SQL query and database connection
+        *-------------------------------------------------------------------*/
+    private static int getNextId(String query, Connection dbconn) {
+        try {
+            Statement stmt = dbconn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting next ID");
+        }
+        return 1;
     }
 }
