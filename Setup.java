@@ -461,7 +461,7 @@ public class Setup {
         "title VARCHAR2(255), " +
         // foreign keys
         "userId NUMBER NOT NULL, " +
-        "pid NUMBER NOT NULL, " +
+        "pid NUMBER, " +
         "CONSTRAINT fk9 FOREIGN KEY (userId) REFERENCES mngo1.Person(userId) ON DELETE CASCADE, " +
         "CONSTRAINT fk10 FOREIGN KEY (pid) REFERENCES mngo1.Persona(pid) ON DELETE SET NULL)";
     public static final String ConversationDrop = 

@@ -424,8 +424,10 @@ public class Interface {
                         String title = promptUserForStr(addConvoTitlePrompt, keyboard);
                         int userId = 1;
                         int pid = 1;
+                        String idQuery = "SELECT MAX(cid) FROM mngo1.Conversation";
+                        int newId = getNextId(idQuery, dbconn);
                         // format and execute the SQL statement to add a conversation with the provided title
-                        statement = String.format("INSERT INTO mngo1.Conversation VALUES ('%s', %d, %d)", title, userId, pid);
+                        statement = String.format("INSERT INTO mngo1.Conversation VALUES (%d, '%s', %d, %d)", newId, title, userId, pid);
                         executeStmt(statement, dbconn);
                         return;
                     }
@@ -531,7 +533,8 @@ public class Interface {
                     String privacy = promptUserForStr(addWorkspacePrivacyPrompt, keyboard);
                     String widQuery = "SELECT NVL(MAX(wid), 0) + 1 FROM mngo1.Workspace";
                     int newWid = getNextId(widQuery, dbconn);
-                    statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, '%s')", newWid, privacy);
+                    int ownerId = 1;
+                    statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, '%s', %d)", newWid, privacy, ownerId);
                     executeStmt(statement, dbconn);
                     System.out.println("Workspace created successfully.");
                     return;
@@ -688,8 +691,10 @@ public class Interface {
                     String instructions = promptUserForStr(addPromptInstructionPrompt, keyboard);
                     String privacy = promptUserForStr(addPromptPrivacyPrompt, keyboard);
                     int userId = 1; // temp
+                    String idQuery = "SELECT MAX(upid) FROM mngo1.UserPrompt";
+                    int newId = getNextId(idQuery, dbconn);
                     // Format and execute SQL statement to create new prompt template with provided inputs
-                    statement = String.format("INSERT INTO mngo1.UserPrompt VALUES ('%s', '%s', %d)", instructions, privacy, userId);
+                    statement = String.format("INSERT INTO mngo1.UserPrompt VALUES (%d, '%s', '%s', %d)", newId, instructions, privacy, userId);
                     executeStmt(statement, dbconn);
                     return;
                 
