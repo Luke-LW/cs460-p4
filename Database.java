@@ -55,36 +55,7 @@ public class Database {
                 System.out.println(e);
             }
         }
-
-        // remove the triggers if they already exist
-        System.out.println("Dropping Triggers...");
-
-        for (String query : Setup.DeleteTriggers) {
-            try {
-                Statement stmt = dbconn.createStatement();
-                stmt.executeUpdate(query);
-            } catch (SQLException e) {
-                System.out.println(query);
-                System.out.println(e);
-            }
-        }
-
-        /*
-        // Creates the triggers
-        System.out.println("Creating Triggers...");
-
-        for (String query : Setup.CreateTriggers) {
-            try {
-                Statement stmt = dbconn.createStatement();
-                stmt.executeUpdate(query);
-            } catch (SQLException e) {
-                System.out.println(query);
-                System.out.println(e);
-            }
-        }
-         */
-
-
+    
         // create the tables
         System.out.println("Creating tables...");
         for (String query : Setup.CreateTables) {
@@ -108,8 +79,32 @@ public class Database {
                 System.out.println(e);
             }
         }
+                // remove the triggers if they already exist
+        System.out.println("Dropping Triggers...");
+
+        for (String query : Setup.DeleteTriggers) {
+            try {
+                Statement stmt = dbconn.createStatement();
+                stmt.executeUpdate(query);
+            } catch (SQLException e) {
+                System.out.println(query);
+                System.out.println(e);
+            }
+        }
+
+        
+        // Creates the triggers
+        System.out.println("Creating Triggers...");
+
+        for (String query : Setup.CreateTriggers) {
+            try {
+                Statement stmt = dbconn.createStatement();
+                stmt.executeUpdate(query);
+            } catch (SQLException e) {
+                System.out.println(query);
+                System.out.println(e);
+            }
+        }
     }
-
-
 }
 
