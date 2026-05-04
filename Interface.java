@@ -1131,7 +1131,7 @@ public class Interface {
                 
                 case 2: // Query 2
                     query = """
-                            SELECT p.userId, p.email, 
+                            SELECT p.userId, p.username, p.email, 
                                 SUM(i.amount) AS total_amount_owed, 
                                 MAX(m.timestamp) AS last_conversation_date
                             FROM mngo1.Person p
@@ -1140,7 +1140,7 @@ public class Interface {
                             LEFT JOIN mngo1.Conversation c ON p.userId = c.userId
                             LEFT JOIN mngo1.Message m ON c.cid = m.cid
                             WHERE i.status = 'unpaid'
-                            GROUP BY p.userId, p.email
+                            GROUP BY p.userId, p.username, p.email
                             HAVING SUM(i.amount) > 0
                             ORDER BY total_amount_owed DESC
                             """;
@@ -1149,42 +1149,48 @@ public class Interface {
 
                 case 3: // Query 3
                     query = """
-                            WITH PersonaStats AS (
-                                SELECT p.pid, p.name AS persona_name,
-                                    COUNT(*) AS total_ai_messages,
-                                    SUM(CASE WHEN m.rating = 1 THEN 1 ELSE 0 END) AS thumbs_up_count,
-                                    COUNT(CASE WHEN m.rating IN (1, -1) THEN 1 END) AS total_feedback
-                                FROM mngo1.Persona p
-                                JOIN mngo1.Conversation c ON p.pid = c.pid
-                                JOIN mngo1.Message m ON c.cid = m.cid
-                                WHERE m.sender = 'ai'
-                                AND m.rating IS NOT NULL
-                                GROUP BY p.pid, p.name
-                            )
                             SELECT persona_name, thumbs_up_count, total_feedback,
                                 ROUND(100.0 * thumbs_up_count / NULLIF(total_feedback, 0), 2) AS thumbs_up_percentage
-                            FROM PersonaStats
-                            ORDER BY thumbs_up_percentage DESC, total_feedback DESC
-                            FETCH FIRST 1 ROW ONLY
+                            FROM (
+                                WITH PersonaStats AS (
+                                    SELECT p.pid, p.name AS persona_name,
+                                        SUM(CASE WHEN m.rating = 1 THEN 1 ELSE 0 END) AS thumbs_up_count,
+                                        COUNT(CASE WHEN m.rating IN (1, -1) THEN 1 END) AS total_feedback
+                                    FROM mngo1.Persona p
+                                    JOIN mngo1.Conversation c ON p.pid = c.pid
+                                    JOIN mngo1.Message m ON c.cid = m.cid
+                                    WHERE m.sender = 'ai'
+                                    AND m.rating IS NOT NULL
+                                    GROUP BY p.pid, p.name
+                                )
+                                SELECT persona_name, thumbs_up_count, total_feedback
+                                FROM PersonaStats
+                                ORDER BY ROUND(100.0 * thumbs_up_count / NULLIF(total_feedback, 0), 2) DESC, total_feedback DESC
+                            )
+                            WHERE ROWNUM = 1
                             """;
                     count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_3);
                     return;
 
                 case 4: // Query 4
                     query = """
-                            SELECT p.username, mbr.tier AS membership_tier, 
-                                COUNT(m.mid) AS total_messages_sent,
-                                ROUND(AVG(LENGTH(m.message)), 2) AS avg_message_length_chars,
-                                COUNT(DISTINCT c.cid) AS num_conversations,
-                                MAX(m.timestamp) AS last_message_date
-                            FROM mngo1.Person p
-                            JOIN mngo1.Membership mbr ON p.mtid = mbr.mtid
-                            JOIN mngo1.Conversation c ON p.userId = c.userId
-                            JOIN mngo1.Message m ON c.cid = m.cid
-                            WHERE m.sender = 'user'
-                            GROUP BY p.username, mbr.tier
-                            ORDER BY total_messages_sent DESC, avg_message_length_chars DESC
-                            FETCH FIRST 5 ROWS ONLY
+                            SELECT username, membership_tier, total_messages_sent,
+                                avg_message_length_chars, num_conversations, last_message_date
+                            FROM (
+                                SELECT p.username, mbr.tier AS membership_tier,
+                                    COUNT(m.mid) AS total_messages_sent,
+                                    ROUND(AVG(LENGTH(m.message)), 2) AS avg_message_length_chars,
+                                    COUNT(DISTINCT c.cid) AS num_conversations,
+                                    MAX(m.timestamp) AS last_message_date
+                                FROM mngo1.Person p
+                                JOIN mngo1.Membership mbr ON p.mtid = mbr.mtid
+                                JOIN mngo1.Conversation c ON p.userId = c.userId
+                                JOIN mngo1.Message m ON c.cid = m.cid
+                                WHERE m.sender = 'user'
+                                GROUP BY p.username, mbr.tier
+                                ORDER BY COUNT(m.mid) DESC, ROUND(AVG(LENGTH(m.message)), 2) DESC
+                            )
+                            WHERE ROWNUM <= 5
                             """;
                     count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_4);
                     return;
