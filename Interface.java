@@ -76,6 +76,8 @@ public class Interface {
         "Select a user to update: ";
     private final static String selectUserForDeletePrompt = 
         "Select a user to delete: ";
+    private final static String addUserLanguagePrompt =
+        "Select a language id (0: Spanish, 1:English, 2: French)";
 
 
     private final static String manageConvoInterface =
@@ -212,6 +214,7 @@ public class Interface {
         Connection dbconn = null;
         try {
             dbconn = DriverManager.getConnection(oracle, username, password);
+            dbconn.setAutoCommit(true);
         } catch (SQLException e) {
             System.out.println("Connection Failed! Check output console");
             e.printStackTrace();
@@ -330,11 +333,12 @@ public class Interface {
                     String email = promptUserForStr(addUserEmailPrompt, keyboard);
                     String username = promptUserForStr(addUserNamePrompt, keyboard);
                     String password = promptUserForStr(addUserPasswordPrompt, keyboard);
+                    int lid = promptUserForInt(addUserLanguagePrompt, keyboard);
                     // Get the next userId to use for this user
                     String idQuery = "SELECT MAX(userId) FROM mngo1.Person";
                     int newId = getNextId(idQuery, dbconn);
                     // format and execute the SQL statement to add a user account with the provided information
-                    statement = String.format("INSERT INTO mngo1.Person VALUES (%d, %s, %s, %s)", newId, username, password, email);
+                    statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', %d, 4)", newId, username, password, email, lid);
                     executeStmt(statement, dbconn);
                     System.out.println("User account created successfully.");
                     return;
@@ -354,7 +358,7 @@ public class Interface {
                             // so we can prompt them for the new information for that user
                         
                         String newEmail = promptUserForStr(updateUserEmailPrompt, keyboard);
-                        statement = String.format("UPDATE mngo1.Person SET email = %s WHERE userId = %d", newEmail, userId);
+                        statement = String.format("UPDATE mngo1.Person SET email = '%s' WHERE userId = %d", newEmail, userId);
                         executeStmt(statement, dbconn);
                         System.out.println("User account updated successfully.");
                     }
@@ -421,7 +425,7 @@ public class Interface {
                         int userId = 1;
                         int pid = 1;
                         // format and execute the SQL statement to add a conversation with the provided title
-                        statement = String.format("INSERT INTO mngo1.Conversation VALUES (%s, %d, %d)", title, userId, pid);
+                        statement = String.format("INSERT INTO mngo1.Conversation VALUES ('%s', %d, %d)", title, userId, pid);
                         executeStmt(statement, dbconn);
                         return;
                     }
@@ -442,7 +446,6 @@ public class Interface {
 
                             String msg = promptUserForStr("Enter message: ", keyboard);
                             String sender = promptUserForStr("Enter sender (user/ai): ", keyboard);
-
                             String mid = "SELECT NVL (MAX(mid), 0) + 1 FROM mngo1.Message WHERE cid = " + cid;
                             int newId = getNextId(mid, dbconn);
 
@@ -528,7 +531,7 @@ public class Interface {
                     String privacy = promptUserForStr(addWorkspacePrivacyPrompt, keyboard);
                     String widQuery = "SELECT NVL(MAX(wid), 0) + 1 FROM mngo1.Workspace";
                     int newWid = getNextId(widQuery, dbconn);
-                    statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, %s)", newWid, privacy);
+                    statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, '%s')", newWid, privacy);
                     executeStmt(statement, dbconn);
                     System.out.println("Workspace created successfully.");
                     return;
@@ -686,7 +689,7 @@ public class Interface {
                     String privacy = promptUserForStr(addPromptPrivacyPrompt, keyboard);
                     int userId = 1; // temp
                     // Format and execute SQL statement to create new prompt template with provided inputs
-                    statement = String.format("INSERT INTO mngo1.UserPrompt VALUES (%s, %s, %d)", instructions, privacy, userId);
+                    statement = String.format("INSERT INTO mngo1.UserPrompt VALUES ('%s', '%s', %d)", instructions, privacy, userId);
                     executeStmt(statement, dbconn);
                     return;
                 
@@ -1104,13 +1107,14 @@ public class Interface {
     private static boolean executeStmt(String statement, Connection dbconn) {
         try {
             Statement stmt = dbconn.createStatement();
+            System.out.println("Executing: " + statement + "\n\n");
             stmt.execute(statement);
-            stmt.executeUpdate("COMMIT");
             System.out.println("Executed statement: " + statement);
             return true;
 
         } catch (SQLException e) {
             System.err.println("Error executing statement: " + statement);
+            System.err.println(e);
             return false;
         }
     }
@@ -1142,17 +1146,17 @@ public class Interface {
                 count++;
                 switch (entity) {
                     case USER:
-                        System.out.printf("%d: (name: %s, pass %s, email: %s)",
+                        System.out.printf("%d: (name: '%s', pass '%s', email: '%s')",
                             rs.getInt("userId"), rs.getString("username"), rs.getString("pwd"), rs.getString("email"));
                         break;
 
                     case MESSAGE:
-                        System.out.printf("%d: (content: %s, feedback: %s)",
+                        System.out.printf("%d: (content: '%s', feedback: '%s')",
                             rs.getInt("messageId"), rs.getString("content"), rs.getString("feedback"));
                         break;
 
                     case CONVERSATION:
-                        System.out.printf("%d: (title: %s)",
+                        System.out.printf("%d: (title: '%s')",
                             rs.getInt("conversationId"), rs.getString("title"));
                         break;
 
@@ -1191,6 +1195,7 @@ public class Interface {
             
         } catch (SQLException e) {
             System.err.println("Error occurred while executing query: " + query);
+            System.err.println(e);
         }
         return count;
     }
@@ -1285,7 +1290,7 @@ public class Interface {
             Statement stmt = dbconn.createStatement();
             ResultSet rs = stmt.executeQuery(query);
             if (rs.next()) {
-                return rs.getInt(1);
+                return rs.getInt(1) + 1;
             }
         } catch (SQLException e) {
             System.err.println("Error getting next ID");
