@@ -324,6 +324,7 @@ public class Interface {
     private static void manageUserAcct(Scanner keyboard, Connection dbconn) {
         System.out.println(userAcctInterface);
         int count;
+        boolean exit;
         String query, statement;
         int input = 0;
         // Every helper function for operations will infintiy loop until the user exists
@@ -361,11 +362,23 @@ public class Interface {
                         String idQuery = "SELECT MAX(userId) FROM mngo1.Person";
                         int newId = getNextId(idQuery, dbconn);
                         // format and execute the SQL statement to add a user account with the provided information
-                        statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', 50, %d, 4)", newId, username, password, email, lid);
+                        statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', 50, %d, 1)", newId, username, password, email, lid);
                         executeStmt(statement, dbconn);
                         System.out.println("User account created successfully.");
                     }
-                    
+                    // Hold the screen to see result before returning to main menu
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
                 
                 case 2: // Update user account
@@ -386,6 +399,18 @@ public class Interface {
                         statement = String.format("UPDATE mngo1.Person SET email = '%s' WHERE userId = %d", newEmail, userId);
                         executeStmt(statement, dbconn);
                         System.out.println("User account updated successfully.");
+                    }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
                     }
                     return;
 
@@ -429,6 +454,18 @@ public class Interface {
                             System.err.println("Error checking user before deletion: " + e);
                         }
                     }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
                 case 4: // back to main menu
                     return;
@@ -458,6 +495,7 @@ public class Interface {
         System.out.println(manageConvoInterface);
         String statement, query;
         int count;
+        boolean exit;
         int input = 0;
 
         while (true) {
@@ -486,6 +524,18 @@ public class Interface {
                         // format and execute the SQL statement to add a conversation with the provided title
                         statement = String.format("INSERT INTO mngo1.Conversation VALUES (%d, '%s', %d, %d)", newId, title, userId, pid);
                         executeStmt(statement, dbconn);
+                        exit = true;
+                        System.out.println("\nEnter 1 to return to main menu");
+                        while (exit){
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            }
+                            else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
+                        }
                         return;
                     }
                 
@@ -523,6 +573,18 @@ public class Interface {
                                 executeStmt(statement, dbconn);
                             }
                             System.out.println("Message added to conversation successfully.");
+                            exit = true;
+                            System.out.println("\nEnter 1 to return to main menu");
+                            while (exit){
+                                input = keyboard.nextInt();
+                                keyboard.nextLine();
+                                if (input == 1) {
+                                    exit = false;
+                                }
+                                else {
+                                    System.err.println("Please enter 1 to return to the main menu.");
+                                }
+                            }
                             return;
                         }
                     }
@@ -553,6 +615,18 @@ public class Interface {
                             executeStmt(statement, dbconn);
                             System.out.println("Feedback updated.");
                         }
+                        exit = true;
+                        System.out.println("\nEnter 1 to return to main menu");
+                        while (exit){
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            }
+                            else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
+                        }
                         return;
                     }
 
@@ -582,6 +656,7 @@ public class Interface {
     private static void manageWorkspace(Scanner keyboard, Connection dbconn) {
         System.out.println(workspaceInterface);
         String statement, query;
+        boolean exit;
         int count;
         int input = 0;
 
@@ -610,6 +685,18 @@ public class Interface {
                     statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, '%s', %d)", newWid, privacy, ownerId);
                     executeStmt(statement, dbconn);
                     System.out.println("Workspace created successfully.");
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
                 
                 case 2: // Modify workspace
@@ -645,6 +732,18 @@ public class Interface {
                         executeStmt(statement, dbconn);
                         System.out.println("Workspace modified successfully.");
                     }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
 
                 case 3: // back to main menu
@@ -673,6 +772,7 @@ public class Interface {
     private static void managePersona(Scanner keyboard, Connection dbconn) {
         System.out.println(personaInterface);
         String statement, query;
+        boolean exit;
         int count;
         int input = 0;
 
@@ -707,7 +807,19 @@ public class Interface {
                             newPid, name, personality);
                         executeStmt(statement, dbconn);
                         System.out.println("Persona created successfully with ID: " + newPid);
-                        return;    
+                        exit = true;
+                        System.out.println("\nEnter 1 to return to main menu");
+                        while (exit){
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            }
+                            else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
+                        }
+                        return;   
                     }
 
                 case 2: // delete persona
@@ -724,6 +836,18 @@ public class Interface {
                             statement = "DELETE FROM mngo1.Persona WHERE pid = " + pid;
                             executeStmt(statement, dbconn);
                             System.out.println("Persona deleted successfully.");
+                        }
+                    }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
                         }
                     }
                     return;
@@ -754,6 +878,7 @@ public class Interface {
     private static void managePromptLibrary(Scanner keyboard, Connection dbconn) {
         System.out.println(promptInterface);
         String statement, query;
+        boolean exit;
         int count;
         int input = 0;
 
@@ -783,6 +908,18 @@ public class Interface {
                     // Format and execute SQL statement to create new prompt template with provided inputs
                     statement = String.format("INSERT INTO mngo1.UserPrompt VALUES (%d, '%s', '%s', %d)", newId, instructions, privacy, userId);
                     executeStmt(statement, dbconn);
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
                 
                 case 2: // Update prompt template
@@ -795,6 +932,18 @@ public class Interface {
                     else {
                         // Prompt user for which prompt template to update
                         int upid = promptUserForInt(selectPromptPrompt, keyboard, dbconn, Entity.USER_PROMPT);
+                    }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
                     }
                     return;
 
@@ -824,6 +973,7 @@ public class Interface {
     private static void manageSubs(Scanner keyboard, Connection dbconn) {
         System.out.println(subscriptionInterface);
         String query;
+        boolean exit;
         int count;
         int input = 0;
 
@@ -862,6 +1012,18 @@ public class Interface {
                             executeStmt(statement, dbconn);
                             System.out.println("Subscription upgraded.");
                             }
+                        exit = true;
+                        System.out.println("\nEnter 1 to return to main menu");
+                        while (exit){
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            }
+                            else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
+                        }
                         return;
                     }
                 
@@ -880,6 +1042,18 @@ public class Interface {
                                 "SELECT messagesLeft FROM mngo1.Person WHERE userId = %d", userId
                             );
                             executeStmt(statement, dbconn);
+                        }
+                        exit = true;
+                        System.out.println("\nEnter 1 to return to main menu");
+                        while (exit){
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            }
+                            else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
                         }
                         return;
                     }
@@ -909,6 +1083,7 @@ public class Interface {
     private static void manageBilling(Scanner keyboard, Connection dbconn) {
         System.out.println(billingInterface);
         String statement, query;
+        boolean exit;
         int count;
         int input = 0;
 
@@ -942,6 +1117,18 @@ public class Interface {
                     
                     executeStmt(statement, dbconn);
                     System.out.println("Monthly invoice generated.");
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
                 
                 case 2: // Mark invoice as paid
@@ -957,6 +1144,18 @@ public class Interface {
                     statement = "UPDATE mngo1.Invoice SET status = 'paid' WHERE invid = " + invId;
                     executeStmt(statement, dbconn);
                     System.out.println("Invoice marked as paid.");
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
 
                 case 3: // back to main menu
@@ -985,6 +1184,7 @@ public class Interface {
     private static void manageTickets(Scanner keyboard, Connection dbconn) {
         System.out.println(supportInterface);
         String statement, query;
+        boolean exit;
         int count;
         int input = 0;
         
@@ -1020,6 +1220,18 @@ public class Interface {
                         
                         executeStmt(statement, dbconn);
                         System.out.println("Support ticket created.");
+                        exit = true;
+                        System.out.println("\nEnter 1 to return to main menu");
+                        while (exit){
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            }
+                            else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
+                        }
                         return;
                     }
                 
@@ -1050,6 +1262,18 @@ public class Interface {
                             statement = "UPDATE mngo1.Ticket SET aid = " + aid + " WHERE tid = " + tid;
                             executeStmt(statement, dbconn);
                             System.out.println("Ticket assigned to agent.");
+                        }
+                        exit = true;
+                        System.out.println("\nEnter 1 to return to main menu");
+                        while (exit){
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            }
+                            else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
                         }
                         return;
                     }
@@ -1085,6 +1309,18 @@ public class Interface {
                             statement = "UPDATE mngo1.Ticket SET outcome = '" + statusStr + "', duration = 30 WHERE tid = " + tid;
                             executeStmt(statement, dbconn);
                             System.out.println("Ticket marked as resolved.");
+                        }
+                        exit = true;
+                        System.out.println("\nEnter 1 to return to main menu");
+                        while (exit){
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            }
+                            else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
                         }
                         return;
                     }
