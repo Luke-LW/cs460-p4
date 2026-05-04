@@ -67,6 +67,18 @@ public class Database {
                 System.out.println(e);
             }
         }
+
+        // create the data
+        System.out.println("Creating Data...");
+        for (String query : Setup.CreateData) {
+            try {
+                Statement stmt = dbconn.createStatement();
+                stmt.executeUpdate(query);
+            } catch (SQLException e) {
+                System.out.println(query);
+                System.out.println(e);
+            }
+        }
     }
 
 
