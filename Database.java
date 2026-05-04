@@ -8,12 +8,17 @@
  *            TA:   James Shen, Muhammad Bilal
  *      Due Date:   May 5th, 2026
  *
- *       Purpose:   
+ *       Purpose: Creates all of the tables for the database.
  * 
- *    Description:  
- *                  
- * 
+ *    Description:  Creates all of the tables and triggers using the statements in Setup.java.
+ *                  Will also drop any tables or triggers that already exist with the same name.
+ *                  After creating the tables, sample data is inserted to the tables. 
+ *                 
  *   Requirements:  Java 25 or earlier
+ *                  Oracle JDBC driver is in your classpath (on Lectura)
+ *                     -> "export CLASSPATH=/usr/lib/oracle/19.8/client64/lib/ojdbc8.jar:${CLASSPATH}"
+ *                  Oracle Login
+ *                  Setup.java, OracleUser.java compiled and in the same directory
  *        Compile:  javac Database.java
  *         Usage:   java Database 
  *    Input Files:  None. 

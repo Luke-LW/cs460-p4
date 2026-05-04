@@ -28,6 +28,10 @@
  *                  and the credentials provided in OracleUser.java 
  *     
  *   Requirements:  Java 25 or earlier
+ *                  Oracle JDBC driver is in your classpath (on Lectura)
+ *                     -> "export CLASSPATH=/usr/lib/oracle/19.8/client64/lib/ojdbc8.jar:${CLASSPATH}"
+ *                  Oracle Login
+ *                  Database.java OracleUser.java Setup.java compiled and in the same directory
  *        Compile:  javac Interface.java
  *         Usage:   java Interface 
  *    Input Files:  None. 
@@ -65,8 +69,8 @@ public class Interface {
         "1: Add account\n" +
         "2: Update account\n" +
         "3: Delete account\n" +
-        "4: update address\n" +
-        "5: update payment method\n" +
+        "4: Update address\n" +
+        "5: Update payment method\n" +
         "6: Back\n" +
         "------------------------\n";
     private final static String addUserEmailPrompt =

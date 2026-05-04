@@ -23,6 +23,10 @@
  *                      @constraint <constraint>
  *                  
  *   Requirements:  Java 25 or earlier
+ *                  Oracle JDBC driver is in your classpath (on Lectura)
+ *                     -> "export CLASSPATH=/usr/lib/oracle/19.8/client64/lib/ojdbc8.jar:${CLASSPATH}"
+ *                  Oracle Login
+ *                  Database.java OracleUser.java compiled and in the same directory
  *        Compile:  javac Setup.java
  *         Usage:   java Setup 
  *    Input Files:  None. 
@@ -31,7 +35,6 @@
 
 public class Setup {
 
-    // export CLASSPATH=/usr/lib/oracle/19.8/client64/lib/ojdbc8.jar:${CLASSPATH}
 
     /**
      * Person (Users)
