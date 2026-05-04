@@ -969,7 +969,23 @@ public class Interface {
                             // Prompt user for which ticket to mark as resolved
                             int tid = promptUserForInt(selectTicketForResolvePrompt, keyboard, dbconn, Entity.SUPPORT_TICKET);
                             int status = promptUserForInt(selectTicketStatus, keyboard, dbconn, Entity.SUPPORT_TICKET);
-                            statement = "UPDATE mngo1.Ticket SET outcome = 'Resolved', duration = 30 WHERE tid = " + tid;
+                            String statusStr;
+                            switch (status) {
+                                case 0:
+                                    statusStr = "Waiting";
+                                    break;
+                                case 1:
+                                    statusStr = "Escalated";
+                                    break;
+                                case 2:
+                                    statusStr = "Resolved";
+                                    break;
+                                default:
+                                    System.err.println("Not a valid status to set.");
+                                    return;
+                                
+                            }
+                            statement = "UPDATE mngo1.Ticket SET outcome = '" + statusStr + "', duration = 30 WHERE tid = " + tid;
                             executeStmt(statement, dbconn);
                             System.out.println("Ticket marked as resolved.");
                         }
