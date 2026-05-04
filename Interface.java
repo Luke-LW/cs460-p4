@@ -224,6 +224,7 @@ public class Interface {
         }
 
         boolean init = true;
+        int input = 0;
         Scanner keyboard = new Scanner(System.in);
 
             // At this point we have connected to the database so we can start the interface loop
@@ -231,8 +232,14 @@ public class Interface {
         while (true) {
             // Print the main menu interface if this is first time through the loop or their was no errors in previous loop iteration.
             if (init) System.out.println(mainInterface);
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
 
                 // The user now has the option to select 1 of the 8 operations to perform
                 // the required functionality on the database. Based on their input
@@ -318,10 +325,17 @@ public class Interface {
         System.out.println(userAcctInterface);
         int count;
         String query, statement;
+        int input = 0;
         // Every helper function for operations will infintiy loop until the user exists
         while (true) {
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
             
                 // We must have a secondary prompt to get the correct user operation
                 // Their are 3 operations: add, update, delete. 
@@ -419,10 +433,17 @@ public class Interface {
         System.out.println(manageConvoInterface);
         String statement, query;
         int count;
+        int input = 0;
 
         while (true) {
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
             switch (input) {
 
                     // We must have a secondary prompt to get the correct message operation
@@ -528,10 +549,17 @@ public class Interface {
         System.out.println(workspaceInterface);
         String statement, query;
         int count;
+        int input = 0;
 
         while (true) {
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
             switch (input) {
 
                     // We must have a secondary prompt to get the correct operation
@@ -612,10 +640,17 @@ public class Interface {
         System.out.println(personaInterface);
         String statement, query;
         int count;
+        int input = 0;
 
         while (true) {
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
             switch (input) {
 
                     // We must have a secondary prompt to get the correct operation
@@ -686,10 +721,17 @@ public class Interface {
         System.out.println(promptInterface);
         String statement, query;
         int count;
+        int input = 0;
 
         while (true) {
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
             switch (input) {
 
                     // We must have a secondary prompt to get the correct operation
@@ -749,10 +791,17 @@ public class Interface {
         System.out.println(subscriptionInterface);
         String query;
         int count;
+        int input = 0;
 
         while (true) {
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
             switch (input) {
 
                     // We must have a secondary prompt to get the correct operation
@@ -827,10 +876,17 @@ public class Interface {
         System.out.println(billingInterface);
         String statement, query;
         int count;
+        int input = 0;
 
         while (true) {
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
             switch (input) {
 
                     // We must have a secondary prompt to get the correct operation
@@ -896,10 +952,17 @@ public class Interface {
         System.out.println(supportInterface);
         String statement, query;
         int count;
+        int input = 0;
         
         while (true) {
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
             switch (input) {
 
                     // We must have a secondary prompt to get the correct operation
@@ -1018,10 +1081,17 @@ public class Interface {
         System.out.println(queryInterface);
         String query;
         int count;
+        int input = 0;
 
         while (true) {
-            int input = keyboard.nextInt();
-            keyboard.nextLine();
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+            } catch (InputMismatchException e) {
+                keyboard.nextLine();
+                System.err.println("Please input an integer.");
+                continue;
+            }
             switch (input) {
 
                     // We now need to prompt the user again to ask them to select a query to execute.
@@ -1291,19 +1361,18 @@ public class Interface {
         |  Returns: string - the user input to the scanner, between 1 and 255 characters in length
         *-------------------------------------------------------------------*/
     private static String promptUserForStr(String prompt, Scanner keyboard) {
-        boolean syntaxError = false; // To validate user input
-        System.out.print(prompt);    // Print the provided prompt to the user
-        String input = keyboard.nextLine().strip();
-        // If the input is not in valid length, mark as syntax error to prompt user again
-        if (input.length() > 255 || input.length() < 1) 
-            syntaxError = true;
+        String msg = prompt;
+        String input = "";
+
         // Repeatedly prompt user until they provide a valid input string between 1 and 255 characters in length
-        while (syntaxError) {
+        while (true) {
             System.out.println();
-            System.err.print("Error: String must be between length of 1 & 255. Please try again: ");
-            input = keyboard.next();
-            if (input.length() <= 255 && input.length() >= 1)
-                syntaxError = false;
+            System.out.print(msg);
+            input = keyboard.nextLine().strip();
+            if (input.length() > 255 || input.length() < 1) {
+                msg = "String must be between length of 1 & 255. Please try again: ";
+            }
+            else break;
         }
         // Once we have valid input, we return that input string
         return input;
@@ -1312,7 +1381,7 @@ public class Interface {
         /*---------------------------------------------------------------------
         |  Method promptUserForInt(prompt, keyboard)
         |
-        |  Purpose: 
+        |  Purpose: Prompts the user for an integer input. Often used for selecting a pk of an entry.
         |
         |  Pre-condition: User needs to input a integer in response to a prompt
         |  Post-condition: An integer is returned based on the provided prompt and user input
@@ -1326,132 +1395,111 @@ public class Interface {
         |  Returns: the selected integer
         *-------------------------------------------------------------------*/
     private static int promptUserForInt(String prompt, Scanner keyboard, Connection dbconn, Entity entity) {
-        boolean syntaxError = false; // To validate user input
-        String errorMsg = "";        // The message that prints when an error arises
-        System.out.print(prompt);    // Print the provided prompt to the user
-        int input = -1;              // Init input to check for type mismatch on the input
+        String msg = prompt;             // The message that prints when an error arises
+        int input = -1;              // Init input
         String tableId = "";
         String pk = "";
-        try {
-            input = keyboard.nextInt();
-            keyboard.nextLine();
-        } catch (InputMismatchException e) {
-            // If the user input is a mismatch (not an integer), we mark it as a syntax error to prompt the user again
-            syntaxError = true;
-            errorMsg = "Error: Please input an integer: ";
+        boolean firstLine = true;    // Do not print newline on first line
+
+        // Select the correct table id and pk for the type of operation
+        switch (entity) {
+          case USER:
+              tableId = "mngo1.Person";
+              pk = "userId";
+              break;
+          
+          case CONVERSATION:
+              tableId = "mngo1.Conversation";
+              pk = "cid";
+              break;
+          
+          case WORKSPACE:
+              tableId = "mngo1.Workspace";
+              pk = "wid";
+              break;
+          
+          case USER_PROMPT:
+              tableId = "mngo1.UserPrompt";
+              pk = "upid";
+              break;
+          
+          case PERSONA:
+              tableId = "mngo1.Persona";
+              pk = "pid";
+              break;
+          
+          case INVOICE:
+              tableId = "mngo1.Invoice";
+              pk = "invid";
+              break;
+          
+          case MESSAGE:
+              tableId = "mngo1.Message";
+              pk = "mid";
+              break;
+          
+          case AGENT:
+              tableId = "mngo1.Agent";
+              pk = "aid";
+              break;
+          
+          case SUPPORT_TICKET:
+              tableId = "mngo1.Ticket";
+              pk = "tid";
+              break;
+          
+          case LANGUAGE:
+              tableId = "mngo1.Language";
+              pk = "lid";
+              break;
         }
-        // Keep sub tiers as between 1 and 3
-        if (entity == Entity.SUBSCRIPTION_TIER && input < 1 && input > 3) {
-          syntaxError = true;
-          errorMsg = "Error: Value must be between 1-3: ";
-        }
-        // Keep ratings as either 1 or -1
-        else if (entity == Entity.RATING_VALUE && input != 1 && input != -1) {
-          syntaxError = true;
-          errorMsg = "Error: Value must be -1 or 1: ";
-        }
-        // Verify that the selected id exists
-        else {
-          switch (entity) {
-            // For each entity type, we set the tableId and primary key column to the corresponding table and pk 
-            case USER:
-                tableId = "mngo1.Person";
-                pk = "userId";
-                break;
-
-            case CONVERSATION:
-                tableId = "mngo1.Conversation";
-                pk = "cid";
-                break;
-
-            case WORKSPACE:
-                tableId = "mngo1.Workspace";
-                pk = "wid";
-                break;
-            
-            case USER_PROMPT:
-                tableId = "mngo1.UserPrompt";
-                pk = "upid";
-                break;
-
-            case PERSONA:
-                tableId = "mngo1.Persona";
-                pk = "pid";
-                break;
-
-            case INVOICE:
-                tableId = "mngo1.Invoice";
-                pk = "invid";
-                break;
-
-            case MESSAGE:
-                tableId = "mngo1.Message";
-                pk = "mid";
-                break;
-
-            case AGENT:
-                tableId = "mngo1.Agent";
-                pk = "aid";
-                break;
-
-            case SUPPORT_TICKET:
-                tableId = "mngo1.Ticket";
-                pk = "tid";
-                break;
-
-            case LANGUAGE:
-                tableId = "mngo1.Language";
-                pk = "lid";
-                break;
-          }
-
-          // Query the db to see if id is present
-          try {
-              String query = String.format("SELECT * FROM %s WHERE %s = %d",
-                  tableId, pk, input
-              );
-              Statement stmt = dbconn.createStatement();
-              ResultSet rs = stmt.executeQuery(query);
-
-              if (!rs.next()) { // There was no result
-                syntaxError = true;
-                errorMsg = "Error: The selected number does not correspond to an entry. Try again: ";
-              }
-          } catch (SQLException e) {
-            System.err.println(e);
-          }
-        }
-
 
         // Repeatedly prompt user until they provide a valid integer input 
-        while (syntaxError) {
-            System.err.print(errorMsg);
+        while (true) {
+            if (firstLine) firstLine = false;
+            else System.out.println();
+            System.out.print(msg);
+
             try {
                 input = keyboard.nextInt();
                 keyboard.nextLine();
-                syntaxError = false;
             } catch (InputMismatchException e) {
-              errorMsg = "Error: Please input an integer: ";
+              msg = "Please input an integer: ";
+              keyboard.nextLine();
+              continue;
             }
-            if (entity == Entity.SUBSCRIPTION_TIER && input < 1 && input > 3)
-              errorMsg = "Error: Value must be between 1-3: ";
-            else if (entity == Entity.RATING_VALUE && input != 1 && input != -1)
-              errorMsg = "Error: Value must be -1 or 1: ";
-            else {
-                try {
-                    String query = String.format("SELECT * FROM %s WHERE %s = %d",
-                        tableId, pk, input
-                    );
-                    Statement stmt = dbconn.createStatement();
-                    ResultSet rs = stmt.executeQuery(query);
-      
-                    if (!rs.next()) { // There was no result
-                        syntaxError = true;
-                        errorMsg = "Error: The selected number does not correspond to an entry. Try again: ";
-                    }
-              } catch (SQLException e) {
-                  System.err.println(e);
-              }
+
+            // Check integer constraints
+            if (entity == Entity.SUBSCRIPTION_TIER && input >= 1 && input <= 3) {
+                break;
+            }   
+            else if (entity == Entity.SUBSCRIPTION_TIER) {
+                msg = "Value must be between 1-3: ";
+                continue;
+            }
+                
+            if (entity == Entity.RATING_VALUE && (input == 1 || input == -1)) {
+                break;
+            }
+            else if (entity == Entity.RATING_VALUE) {
+                msg = "Value must be -1 or 1: ";
+                continue;
+            }
+
+            try {
+                String query = String.format("SELECT * FROM %s WHERE %s = %d",
+                tableId, pk, input
+            );
+            Statement stmt = dbconn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+
+            if (rs.next())
+                break;
+            else 
+                msg = "The selected number does not correspond to an entry. Try again: ";
+            } catch (SQLException e) {
+                msg = "There was an error verifying your selection, please try again: ";
+                System.err.println(e);
             }
         }
         // Once we have valid input, we return that input integer
