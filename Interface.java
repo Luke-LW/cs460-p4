@@ -40,7 +40,8 @@ import java.util.Scanner;
 public class Interface {
     private enum Entity {
         USER, MESSAGE, CONVERSATION, WORKSPACE, PERSONA, USER_PROMPT, INVOICE, SUPPORT_TICKET, AGENT, BILLING_RECORD, 
-        SPECIAL_QUERY_1, SPECIAL_QUERY_2, SPECIAL_QUERY_3, SPECIAL_QUERY_4, SUBSCRIPTION_TIER, RATING_VALUE, LANGUAGE
+        SPECIAL_QUERY_1, SPECIAL_QUERY_2, SPECIAL_QUERY_3, SPECIAL_QUERY_4, SUBSCRIPTION_TIER, RATING_VALUE, LANGUAGE,
+        PROMPT_CATEGORY
     };
 
     private final static String mainInterface =
@@ -139,7 +140,8 @@ public class Interface {
         "1: Add prompt template\n" +
         "2: Update prompt template privacy\n" +
         "3: Update prompt template instruction\n" +
-        "4: Back\n" +
+        "4: Add prompt template to a category\n" +
+        "5: Back\n" +
         "------------------------\n";
     private final static String addPromptPrivacyPrompt = 
         "Select a privacy option for this prompt (private/public): ";
@@ -153,6 +155,10 @@ public class Interface {
         "What is the new privacy ('public', 'private'): ";
     private final static String updatePromptInstructionPrompt = 
         "What is the new instruction: ";
+    private final static String selectPromptForCategoryPrompt =
+        "Select a prompt to add to the category: ";
+    private final static String selectCategoryPrompt =
+        "Select a prompt category to add to: ";
 
     private final static String subscriptionInterface =
         "\f------------------------\n" +
@@ -1256,7 +1262,44 @@ public class Interface {
                     }
                     return;
 
-                case 4: // back to main menu
+                case 4: // Add prompt template to category
+                    query = "SELECT * FROM mngo1.PromptCategory";
+                    count = executeQuery(query, dbconn, Entity.PROMPT_CATEGORY);
+                    if (count == 0) {
+                        System.err.println("There are no prompt categories to select.");
+                    }
+                    else {
+                        // Ask user which prompt category to use
+                        int pcid = promptUserForInt(selectCategoryPrompt, keyboard, dbconn, Entity.PROMPT_CATEGORY);
+                        
+                        query = "SELECT * FROM mngo1.UserPrompt";
+                        count = executeQuery(query, dbconn, Entity.USER_PROMPT);
+                        if (count == 0) {
+                            System.err.println("There are no prompt templates to select");
+                        }
+                        else {
+                            // Ask user which template to categorize
+                            int upid = promptUserForInt(selectPromptForCategoryPrompt, keyboard, dbconn, Entity.USER_PROMPT);
+                            statement = String.format("INSERT INTO mngo1.PromptCategoryUserPrompt VALUES (%d, %d)", pcid, upid);
+                            executeStmt(statement, dbconn);
+                            System.out.println("Successfully categorized prompt.");
+                        }
+                    }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
+                    return;
+
+                case 5: // back to main menu
                     return;
             
                 default:
@@ -1980,6 +2023,11 @@ public class Interface {
                         );
                         break;
 
+                    case PROMPT_CATEGORY:
+                        System.out.printf("%d: (name: %s)\n",
+                            rs.getInt("pcid"), rs.getString("categoryname")
+                        );
+
                     case SPECIAL_QUERY_1:   // Special format for query 1
                         System.out.printf("%d: (user: %s, conversation: %s, message: %s, timestamp: %s)\n",
                             rs.getInt("userId"), rs.getString("username"), rs.getString("title"), rs.getString("message"), rs.getString("timestamp")
@@ -2156,6 +2204,11 @@ public class Interface {
           case LANGUAGE:
               tableId = "mngo1.Language";
               pk = "lid";
+              break;
+
+          case PROMPT_CATEGORY:
+              tableId = "mngo1.PromptCategory";
+              pk = "pcid";
               break;
 
           default:
