@@ -840,29 +840,34 @@ public class Setup {
         "END;";
     
     /**
-     * @trigger When a user adds a Conversation, check that
+     * @trigger When a user adds a Conversation to a Workspace
+     *      (Inserting ConversationWorkspace Table), check that
      *      they are actually a member of that workspace in:
      *          UserWorkspace
      */
     public static final String unknownConversationInWorkspaceTrigger = 
         // Trigger before insert into Conversation
         "CREATE OR REPLACE TRIGGER mngo1.enforce_workspace_conversation " +
-        "BEFORE INSERT ON mngo1.Conversation " +
+        "BEFORE INSERT ON mngo1.ConversationWorkspace " +
         "FOR EACH ROW " +
-        // For each Conversation being added, declare a variable to count the number of workspace
+        // For each ConversationWorkspace being added, declare a variable to count the number of workspace
         "DECLARE " +
-        "   member_count NUMBER; " +
+        "   v_userId NUMBER; " +
+        "   v_exists NUMBER; " +
         // Begin the trigger
         "BEGIN " +
+            // Get the userId of the conversation
+        "   SELECT userId " +
+        "   INTO v_userId " + 
+        "   FROM mngo1.Conversation " +
+        "   WHERE cid = :NEW.cid; " +
             // Check that the user adding the Conversation is a member of the workspace
-            // they are trying to add to (member_count should be 1 if they are a member, 0 if not)
-        "   SELECT COUNT(*) INTO member_count " +
-        "   FROM mngo1.UserWorkspace uw" +
-        "   JOIN mngo1.Conversation c ON uw.userId = c.userId " +
-        "   WHERE c.cid = :NEW.cid AND uw.wid = :NEW.wid; " +
+        "   SELECT COUNT(*) INTO v_exists " +
+        "   FROM mngo1.UserWorkspace" +
+        "   WHERE userId = v_userId AND wid = :NEW.wid; " +
         // If the member count is 0, it means the user is not a member of the workspace, so raise an error to prevent insertion
-        "   IF member_count = 0 THEN " +
-        "       RAISE_APPLICATION_ERROR(-20002, " +
+        "   IF v_exists = 0 THEN " +
+        "       RAISE_APPLICATION_ERROR(-20001, " +
         "       'User is not a member of the specified workspace.'); " +
         "   END IF; " +
         "END;";

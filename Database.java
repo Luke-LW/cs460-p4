@@ -68,18 +68,7 @@ public class Database {
             }
         }
 
-        // create the data
-        System.out.println("Creating Data...");
-        for (String query : Setup.CreateData) {
-            try {
-                Statement stmt = dbconn.createStatement();
-                stmt.executeUpdate(query);
-            } catch (SQLException e) {
-                System.out.println(query);
-                System.out.println(e);
-            }
-        }
-                // remove the triggers if they already exist
+        // remove the triggers if they already exist
         System.out.println("Dropping Triggers...");
 
         for (String query : Setup.DeleteTriggers) {
@@ -91,7 +80,6 @@ public class Database {
                 System.out.println(e);
             }
         }
-
         
         // Creates the triggers
         System.out.println("Creating Triggers...");
@@ -105,6 +93,19 @@ public class Database {
                 System.out.println(e);
             }
         }
+
+        // create the data
+        System.out.println("Creating Data...");
+        for (String query : Setup.CreateData) {
+            try {
+                Statement stmt = dbconn.createStatement();
+                stmt.executeUpdate(query);
+            } catch (SQLException e) {
+                System.out.println(query);
+                System.out.println(e);
+            }
+        }
+
     }
 }
 

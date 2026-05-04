@@ -1532,6 +1532,10 @@ public class Interface {
               tableId = "mngo1.Language";
               pk = "lid";
               break;
+
+          default:
+              System.err.println("Unknown table id: " + entity);
+              break;
         }
 
         // Repeatedly prompt user until they provide a valid integer input 
