@@ -1,7 +1,45 @@
+/*
+ *         Names:   Minh Ngo 
+                    Luke Livesay-Wright
+                    Derek Hoshaw
+ *        Course:   CSC 460
+ *    Assignment:   Program 4
+ *    Instructor:   Lester McCann
+ *            TA:   James Shen, Muhammad Bilal
+ *      Due Date:   May 5th, 2026
+ *
+ *       Purpose:   Provide a User Interface for performing the neccessary database operations
+ *                  for the DBMS of the AI messaging platform.
+ * 
+ *    Description:  The Iterface centers around a series of menus that the user can navigate 
+ *                  through with the numpad (1-9)to perform the required operations for managing the database. 
+ *                  The main menu contains the 8 neccessary functionalities as decribed in the spec
+ *                  Each functionality/operation calls its own helper method to perform that operation
+ *                  Each helper method has its own secondary menu and prompts to guide the user through performing that operation 
+ *                  sometimes needing further input to get addional information required for that operation.
+ * 
+ *                  All printing is done through the series of static strings defined at the top of the class
+ *                  where we call each string to print the corresponding menu or prompt when we need it.
+ *                  Each menu/submenu is a switch statement that takes user input and calls
+ *                  the corresponding helper method for the operation the user wants to perform.
+ *                  To perform operations we format and execute SQL statements based on user input and the operation they want to perform.
+ *                  To get user input we have dedicated helper methods to validate the input
+ *                  We connect to the database via the JDBC driver (followed from Prog3)
+ *                  and the credentials provided in OracleUser.java 
+ *     
+ *   Requirements:  Java 25 or earlier
+ *        Compile:  javac Interface.java
+ *         Usage:   java Interface 
+ *    Input Files:  None. 
+ */
+
 import java.sql.*;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Interface {
+    private enum Entity {USER, MESSAGE, CONVERSATION, WORKSPACE, PERSONA, USER_PROMPT, INVOICE, SUPPORT_TICKET, AGENT};
+
     private final static String mainInterface =
             "\f----------------------------------------------------\n" +
             "Type a number to access a certain functionality:\n" +
@@ -24,6 +62,17 @@ public class Interface {
         "3: Delete account\n" +
         "4: Back\n" +
         "------------------------\n";
+    private final static String addUserEmailPrompt =
+        "Enter an email for the user: ";
+    private final static String addUserNamePrompt =
+        "Enter a name for the user: ";
+    private final static String addUserPasswordPrompt =
+        "Enter a password for the user: ";
+    private final static String selectUserForUpdatePrompt =
+        "Select a user to update: ";
+    private final static String selectUserForDeletePrompt = 
+        "Select a user to delete: ";
+
 
     private final static String manageConvoInterface =
         "\f----------------------------------\n" +
@@ -33,6 +82,14 @@ public class Interface {
         "3: Update message feedback\n" +
         "4: Back\n" +
         "----------------------------------\n";
+    private final static String addConvoTitlePrompt = 
+        "Enter a title for the conversation: ";
+    private final static String selectConvoForUpdatePrompt =
+        "Select a conversation to add messages to: ";
+    private final static String selectMessageForConvoPrompt =
+        "Select one of the following messages to add to the conversation: ";
+    private final static String selectMessageForFeedbackPrompt =
+        "Select one of the following messages to adjust its feedback: ";
 
     private final static String workspaceInterface =
         "\f------------------------\n" +
@@ -41,6 +98,10 @@ public class Interface {
         "2: Modify workspace\n" +
         "3: Back\n" +
         "------------------------\n";
+    private final static String addWorkspacePrivacyPrompt =
+        "Select a privacy option for this workspace: ";
+    private final static String selectWorkspacePrompt =
+        "Select a workspace to modify: ";
 
     private final static String personaInterface =
         "\f------------------------\n" +
@@ -49,6 +110,12 @@ public class Interface {
         "2: Delete persona\n" +
         "3: Back\n" + 
         "------------------------\n";
+    private final static String addPersonaNamePrompt =
+        "Enter a name for this persona: ";
+    private final static String addPersonaPersonalityPrompt =
+        "Enter a personality for this persona: ";
+    private final static String selectPersonaToDeletePrompt =
+        "Select a persona to delete: ";
 
     private final static String promptInterface =
         "\f------------------------\n" +
@@ -57,6 +124,12 @@ public class Interface {
         "2: Update prompt template\n" +
         "3: Back\n" +
         "------------------------\n";
+    private final static String addPromptPrivacyPrompt = 
+        "Select a privacy option for this prompt: ";
+    private final static String addPromptInstructionPrompt =
+        "Enter the instructions for this prompt: ";
+    private final static String selectPromptPrompt =
+        "Select a prompt template to update: ";
 
     private final static String subscriptionInterface =
         "\f------------------------\n" +
@@ -65,6 +138,10 @@ public class Interface {
         "2: Check user's limit\n" +
         "3: Back\n" +
         "------------------------\n";
+    private final static String selectUserForUpgradePrompt =
+        "Select a user to upgrade their subscription tier: ";
+    private final static String selectUserForLimitCheck = 
+        "Select a user to see how close they are to their message limit: ";
 
     private final static String billingInterface =
         "\f------------------------\n" +
@@ -73,6 +150,8 @@ public class Interface {
         "2: Mark invoice as paid\n" +
         "3: Back\n" +
         "------------------------\n"; 
+    private final static String selectInvoiceToPayPrompt = 
+        "Select an invoice to mark as paid: ";
 
     private final static String supportInterface =
         "\f------------------------\n" +
@@ -82,10 +161,21 @@ public class Interface {
         "3: Mark ticket as resolved\n" +
         "4: Back\n" +
         "------------------------\n";
+    private final static String addTicketTopicPrompt =
+        "Enter a reason for creating the support ticket: ";
+    private final static String selectTicketForAgentPrompt =
+        "Select a ticket to assign to an agent: ";
+    private final static String selectAgentPrompt =
+        "Select an agent to assign to the ticket: ";
+    private final static String selectTicketForResolvePrompt =
+        "Select a ticket to resolve: ";
 
     private final static String commandError = "Error: Unrecognized Command. Try again:\n";
 
+
+
     public static void main(String[] args) {
+        // Connect to the database using the credentials provided in OracleUser.java and JDBC Driver
         String oracle = OracleUser.oracle;
         String username = OracleUser.username;
         String password = OracleUser.password;
@@ -109,48 +199,61 @@ public class Interface {
         // start interface
         boolean init = true;
         Scanner keyboard = new Scanner(System.in);
+
+            // At this point we have connected to the database so we can start the interface loop
+
         while (true) {
+            // Print the main menu interface if this is first time through the loop or their was no errors in previous loop iteration.
             if (init) System.out.println(mainInterface);
             int input = keyboard.nextInt();
+            keyboard.nextLine();
+
+                // The user now has the option to select 1 of the 8 operations to perform
+                // the required functionality on the database. Based on their input
+                // The switch statement will call the corresponding helper method to 
+                // perform that operation. Each helper method has its own secondart prompts
+                // To guide the user through the process of performing the operation they selected.
+                // To exit the program, the user can input 9 from the main menu to exit.
+                // To exit any opeation submenu, the user can input the option to go back which will be the last option in each submenu
 
             switch (input) {
                 case 1:
-                    manageUserAcct(keyboard);
+                    manageUserAcct(keyboard, dbconn); // For example, to manage user accounts, the manageUserAcct helper method is called
                     init = true;
                     break;
                 
                 case 2:
-                    manageMsg(keyboard);
+                    manageMsg(keyboard, dbconn);
                     init = true;
                     break;
 
                 case 3:
-                    manageWorkspace(keyboard);
+                    manageWorkspace(keyboard, dbconn);
                     init = true;
                     break;
 
                 case 4:
-                    managePersona(keyboard);
+                    managePersona(keyboard, dbconn);
                     init = true;
                     break;
 
                 case 5:
-                    managePromptLibrary(keyboard);
+                    managePromptLibrary(keyboard, dbconn);
                     init = true;
                     break;
 
                 case 6:
-                    manageSubs(keyboard);
+                    manageSubs(keyboard, dbconn);
                     init = true;
                     break;
 
                 case 7:
-                    manageBilling(keyboard);
+                    manageBilling(keyboard, dbconn);
                     init = true;
                     break;
 
                 case 8:
-                    manageTickets(keyboard);
+                    manageTickets(keyboard, dbconn);
                     init = true;
                     break;
 
@@ -166,23 +269,74 @@ public class Interface {
         }
     }
 
-    // Handle user account management
-    private static void manageUserAcct(Scanner keyboard) {
+        /*---------------------------------------------------------------------
+        |  Method manageUserAcct(keyboard, dbconn)
+        |
+        |  Purpose: manage user accounts, including creating, updating, and deleting accounts
+        |
+        |  Pre-condition: User is connected to the database and selected UI option 1 to manage user accounts
+        |  Post-condition: User accounts are managed successfully based on further input
+        |
+        |  Parameters:
+        |      Scanner keybaord - used to get user input for managing user accounts
+        |      Connection dbconn - used to execute SQL statements to manage user accounts in the database
+        |      
+        |  Returns: None.
+        *-------------------------------------------------------------------*/
+    private static void manageUserAcct(Scanner keyboard, Connection dbconn) {
         System.out.println(userAcctInterface);
-
+        int count;
+        String query, statement;
+        // Every helper function for operations will infintiy loop until the user exists
         while (true) {
             int input = keyboard.nextInt();
+            keyboard.nextLine();
+            
+                // We must have a secondary prompt to get the correct user operation
+                // Their are 3 operations: add, update, delete. 
+                // Each operation requires the user to input different information, 
+                // so we need to prompt them for that information after they select 
+                // the operation they want to perform, 
+                // we use helper method promptUserForStr and promptUserForInt to get the additional information
+
             switch (input) {
                 case 1: // Add user account
-                    break;
+                    String email = promptUserForStr(addUserEmailPrompt, keyboard);
+                    String username = promptUserForStr(addUserNamePrompt, keyboard);
+                    String password = promptUserForStr(addUserPasswordPrompt, keyboard);
+                    // format and execute the SQL statement to add a user account with the provided information
+                    statement = String.format("INSERT INTO mngo.Person VALUES (%d, %s, %s, %s)", 1, username, password, email);
+                    executeStmt(statement, dbconn);
+                    return;
                 
                 case 2: // Update user account
-                    break;
+                    // Get all users and print out some of their information so the user can select which account to update based on that information
+                    query = "SELECT * FROM mngo1.Person";
+                    System.out.println(query);
+                    count = executeQuery(query, dbconn, Entity.USER);
+                    // If there are no users, we can't update anything, so we print an error message and return to the previous menu
+                    if (count == 0)
+                        System.err.println("There are no users to select.");
+                    else {
+                        // If user exists to update, call helper method to prompt user for specific user 
+                        int userId = promptUserForInt(selectUserForUpdatePrompt, keyboard);
+                    }
+                    return;
 
                 case 3: // Delete user account
-                    break;
+                    // Similar to update user account, we need to get all users 
+                    query = "SELECT * FROM mngo1.Person";
+                    System.out.println(query);
+                    count = executeQuery(query, dbconn, Entity.USER);
+                    if (count == 0)
+                        System.err.println("There are no users to select.");
+                    else {
+                        // If the user exists , call helper method to prompt user for specific user to delete
+                        int userId = promptUserForInt(selectUserForDeletePrompt, keyboard);
+                    }
+                    return;
 
-                case 4: // back
+                case 4: // back to main menu
                     return;
             
                 default:
@@ -191,23 +345,81 @@ public class Interface {
         }
     }
 
-    // Handle conversation and message management
-    private static void manageMsg(Scanner keyboard) {
+        /*---------------------------------------------------------------------
+        |  Method manageMsg(keyboard, dbconn)
+        |
+        |  Purpose: manage conversations and messages, including starting new conversations, 
+                    adding messages to conversations, and updating message feedback
+        |
+        |  Pre-condition: User is connected to the database and selected UI option 2 to manage messages
+        |  Post-condition: User conversations and messages are managed successfully based on further input
+        |
+        |  Parameters:
+        |      Scanner keybaord - used to get user input for managing conversations and messages
+        |      Connection dbconn - used to execute SQL statements to manage conversations and messages in the database
+        |      
+        |  Returns: None.
+        *-------------------------------------------------------------------*/
+    private static void manageMsg(Scanner keyboard, Connection dbconn) {
         System.out.println(manageConvoInterface);
+        String statement, query;
+        int count;
 
         while (true) {
             int input = keyboard.nextInt();
+            keyboard.nextLine();
             switch (input) {
+
+                    // We must have a secondary prompt to get the correct message operation
+                    // Their are 3 operations: new conversation, add messages to conversation, update message feedback. 
+                    // Each operation calls the secondary helper method to perform that operation in coordination
+                    // with a SQL statement that is executed to manage the conversations and messages in the database based on user input
+
                 case 1: // New conversation
-                    break;
+                    String title = promptUserForStr(addConvoTitlePrompt, keyboard);
+                    // format and execute the SQL statement to add a conversation with the provided title
+                    statement = String.format("INSERT INTO mngo1.Conversation VALUES (%d, %s)", 1, title);
+                    executeStmt(statement, dbconn);
+                    return;
                 
                 case 2: // Add messages to conversation
-                    break;
+                    // Get all conversations to find which conversation to add messages to
+                    query = "SELECT * FROM mngo1.Conversation";
+                    count = executeQuery(query, dbconn, Entity.CONVERSATION);
+                    if (count == 0) {
+                        System.err.println("There are no conversations to select.");
+                        return;
+                    }
+                    else {
+                        int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard);
+                    }
+                    
+                        // At this point we have found the conversation the user wants
+                        // So we perform a similar operation to add a message to the conversation
+
+                    query = "SELECT * FROM mngo1.Message";
+                    count = executeQuery(query, dbconn, Entity.MESSAGE);
+                    if (count == 0) {
+                        System.err.println("There are no messages to select.");
+                    }
+                    else {
+                        int mid = promptUserForInt(selectMessageForConvoPrompt, keyboard);
+                    }
+                    return;
 
                 case 3: // Update message feedback
-                    break;
+                    // Get all messages to find which message to update feedback for
+                    query = "SELECT * FROM mngo1.Message";
+                    count = executeQuery(query, dbconn, Entity.MESSAGE);
+                    if (count == 0) {
+                        System.err.println("There are no messages to select.");
+                    }
+                    else {
+                        int mid = promptUserForInt(selectMessageForFeedbackPrompt, keyboard);
+                    }
+                    return;
 
-                case 4: // back
+                case 4: // back to main menu
                     return;
             
                 default:
@@ -216,20 +428,56 @@ public class Interface {
         }
     }
 
-    // Handle workspace management
-    private static void manageWorkspace(Scanner keyboard) {
+        /*---------------------------------------------------------------------
+        |  Method manageWorkspace(keyboard, dbconn)
+        |
+        |  Purpose: manage workspaces, including creating new workspaces and modifying existing workspaces
+        |
+        |  Pre-condition: User is connected to the database and selected UI option 3 to manage workspaces
+        |  Post-condition: User workspaces are managed successfully based on further input
+        |
+        |  Parameters:
+        |      Scanner keybaord - used to get user input for managing workspaces
+        |      Connection dbconn - used to execute SQL statements to manage user workspaces in the database
+        |      
+        |  Returns: None.
+        *-------------------------------------------------------------------*/
+    private static void manageWorkspace(Scanner keyboard, Connection dbconn) {
         System.out.println(workspaceInterface);
+        String statement, query;
+        int count;
 
         while (true) {
             int input = keyboard.nextInt();
+            keyboard.nextLine();
             switch (input) {
+
+                    // We must have a secondary prompt to get the correct operation
+                    // Their are 2 operations: create workspace, modify workspace.
+                    // Each operation calls the secondary helper method to perform that operation in coordination
+                    // with a SQL statement that is executed to manage the workspaces
+
                 case 1: // New workspace
-                    break;
+                    // Prompt user for privacy setting of workspace, then format and execute SQL statement to create a workspace with that privacy setting
+                    String privacy = promptUserForStr(addWorkspacePrivacyPrompt, keyboard);
+                    statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, %s)", 1, privacy);
+                    executeStmt(statement, dbconn);
+                    return;
                 
                 case 2: // Modify workspace
-                    break;
+                    // Get all workspaces to find which workspace to modify
+                    query = "SELECT * FROM mngo1.Workspace";
+                    count = executeQuery(query, dbconn, Entity.WORKSPACE);
+                    if (count == 0) {
+                        System.err.println("There are no workspaces to select.");
+                    }
+                    else {
+                        // Prompt user for which workspace to modify.
+                        int wid = promptUserForInt(selectWorkspacePrompt, keyboard);
+                    }
+                    return;
 
-                case 3: // back
+                case 3: // back to main menu
                     return;
             
                 default:
@@ -238,20 +486,58 @@ public class Interface {
         }
     }
 
-    // Handle persona management
-    private static void managePersona(Scanner keyboard) {
+        /*---------------------------------------------------------------------
+        |  Method managePersona (keyboard, dbconn)
+        |
+        |  Purpose: manage personas, including creating new personas and deleting existing personas
+        |
+        |  Pre-condition: User is connected to the database and selected UI option 4 to manage personas
+        |  Post-condition: User personas are managed successfully based on further input
+        |
+        |  Parameters:
+        |      Scanner keyboard - used to get user input for managing personas
+        |      Connection dbconn - used to execute SQL statements to manage user personas in the database
+        |      
+        |  Returns: None.
+        *-------------------------------------------------------------------*/
+    private static void managePersona(Scanner keyboard, Connection dbconn) {
         System.out.println(personaInterface);
+        String statement, query;
+        int count;
 
         while (true) {
             int input = keyboard.nextInt();
+            keyboard.nextLine();
             switch (input) {
+
+                    // We must have a secondary prompt to get the correct operation
+                    // Their are 2 operations: create persona, delete persona.
+                    // Each operation calls the secondary helper method to perform that operation in coordination
+                    // with a SQL statement that is executed to manage the personas
+
                 case 1: // New persona
-                    break;
+                    // Prompt user for name and personality strings for the new persona
+                    String name = promptUserForStr(addPersonaNamePrompt, keyboard);
+                    String personality = promptUserForStr(addPersonaPersonalityPrompt, keyboard);
+                    // Format and execute SQL statement to create new persona with provided inputs
+                    statement = String.format("INSERT INTO mngo1.Persona VALUES (%d, %s, %s)", 1, name, personality);
+                    executeStmt(statement, dbconn);
+                    return;
                 
                 case 2: // delete persona
-                    break;
+                    // Get all personas to find which persona to delete
+                    query = "SELECT * FROM mngo1.Persona";
+                    count = executeQuery(query, dbconn, Entity.PERSONA);
+                    if (count == 0) {
+                        System.err.println("There are no personas to select.");
+                    }
+                    else {
+                        // Prompt user for which persona to delete
+                        int wid = promptUserForInt(selectPersonaToDeletePrompt, keyboard);
+                    }
+                    return;
 
-                case 3: // back
+                case 3: // back to main menu
                     return;
             
                 default:
@@ -260,20 +546,58 @@ public class Interface {
         }
     }
 
-    // Handle prompt library management
-    private static void managePromptLibrary(Scanner keyboard) {
+        /*---------------------------------------------------------------------
+        |  Method managePromptLibrary(keyboard, dbconn)
+        |
+        |  Purpose: manages the prompt library, including adding new prompt templates and updating existing prompt templates
+        |
+        |  Pre-condition: User is connected to the database and selected UI option 5 to manage prompt library
+        |  Post-condition: Prompt templates are managed successfully based on further input
+        |
+        |  Parameters:
+        |      Scanner keyboard - used to get user input for managing prompt templates
+        |      Connection dbconn - used to execute SQL statements to manage prompt templates in the database
+        |
+        |  Returns: None.
+        *-------------------------------------------------------------------*/
+    private static void managePromptLibrary(Scanner keyboard, Connection dbconn) {
         System.out.println(promptInterface);
+        String statement, query;
+        int count;
 
         while (true) {
             int input = keyboard.nextInt();
+            keyboard.nextLine();
             switch (input) {
+
+                    // We must have a secondary prompt to get the correct operation
+                    // Their are 2 operations: create prompt template, update prompt template.
+                    // Each operation calls the secondary helper method to perform that operation in coordination
+                    // with a SQL statement that is executed to manage the prompt templates
+
                 case 1: // New prompt template
-                    break;
+                    // Prompt user for instructions and privacy setting for the new prompt template
+                    String instructions = promptUserForStr(addPromptInstructionPrompt, keyboard);
+                    String privacy = promptUserForStr(addPromptPrivacyPrompt, keyboard);
+                    // Format and execute SQL statement to create new prompt template with provided inputs
+                    statement = String.format("INSERT INTO mngo1.UserPrompt VALUES (%d, %s, %s)", 1, instructions, privacy);
+                    executeStmt(statement, dbconn);
+                    return;
                 
                 case 2: // Update prompt template
-                    break;
+                    // Get all prompt templates to find which prompt template to update
+                    query = "SELECT * FROM mngo1.UserPrompt";
+                    count = executeQuery(query, dbconn, Entity.USER_PROMPT);
+                    if (count == 0) {
+                        System.err.println("There are no prompt templates to select.");
+                    }
+                    else {
+                        // Prompt user for which prompt template to update
+                        int upid = promptUserForInt(selectPromptPrompt, keyboard);
+                    }
+                    return;
 
-                case 3: // back
+                case 3: // back to main menu
                     return;
             
                 default:
@@ -282,20 +606,62 @@ public class Interface {
         }
     }
 
-    // Handle supscription management
-    private static void manageSubs(Scanner keyboard) {
+        /*---------------------------------------------------------------------
+        |  Method manageSubs(keyboard, dbconn)
+        |
+        |  Purpose: manages subscriptions, including upgrading user subscription tiers and checking how close users are to their message limits
+        |
+        |  Pre-condition: User is connected to the database and selected UI option 6 to manage subscriptions
+        |  Post-condition: Subscriptions are managed successfully based on further input
+        |
+        |  Parameters:
+        |      Scanner keyboard - used to get user input for managing subscriptions
+        |      Connection dbconn - used to execute SQL statements to manage subscriptions in the database
+        |
+        |  Returns: None.
+        *-------------------------------------------------------------------*/
+    private static void manageSubs(Scanner keyboard, Connection dbconn) {
         System.out.println(subscriptionInterface);
+        String query;
+        int count;
 
         while (true) {
             int input = keyboard.nextInt();
+            keyboard.nextLine();
             switch (input) {
+
+                    // We must have a secondary prompt to get the correct operation
+                    // Their are 2 operations: upgrade user subscription tier, check user's message limit.
+                    // Each operation calls the secondary helper method to perform that operation in coordination
+                    // with a SQL statement that is executed to manage subscriptions 
+
                 case 1: // Upgrade user tier
-                    break;
+                    // Get all users to find which user to upgrade
+                    query = "SELECT * FROM mngo1.Person";
+                    count = executeQuery(query, dbconn, Entity.USER);
+                    if (count == 0) {
+                        System.err.println("There are no users to select.");
+                    }
+                    else {
+                        // Prompt user for which user to upgrade
+                        int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard);
+                    }
+                    return;
                 
                 case 2: // Check user limit
-                    break;
+                    // Get all users to find which user to check message limit for
+                    query = "SELECT * FROM mngo1.Person";
+                    count = executeQuery(query, dbconn, Entity.USER);
+                    if (count == 0) {
+                        System.err.println("There are no users to select.");
+                    }
+                    else {
+                        // Prompt user for which user to check message limit for
+                        int userId = promptUserForInt(selectUserForLimitCheck, keyboard);
+                    }
+                    return;
 
-                case 3: // back
+                case 3: // back to main menu
                     return;
             
                 default:
@@ -304,20 +670,53 @@ public class Interface {
         }
     }
 
-    // Handle billing management
-    private static void manageBilling(Scanner keyboard) {
+        /*---------------------------------------------------------------------
+        |  Method manageBilling(keyboard, dbconn)
+        |
+        |  Purpose: manages billing, including generating invoices and marking invoices as paid
+        |
+        |  Pre-condition: User is connected to the database and selected UI option 7 to manage billing
+        |  Post-condition: Billing is managed successfully based on further input
+        |
+        |  Parameters:
+        |      Scanner keyboard - used to get user input for managing billing
+        |      Connection dbconn - used to execute SQL statements to manage billing in the database
+        |
+        |  Returns: None.
+        *-------------------------------------------------------------------*/
+    private static void manageBilling(Scanner keyboard, Connection dbconn) {
         System.out.println(billingInterface);
+        String statement, query;
+        int count;
 
         while (true) {
             int input = keyboard.nextInt();
+            keyboard.nextLine();
             switch (input) {
+
+                    // We must have a secondary prompt to get the correct operation
+                    // Their are 2 operations: genearte invoice, mark invoice as paid.
+                    // Each operation calls the secondary helper method to perform that operation in coordination
+                    // with a SQL statement that is executed to manage billing
+
                 case 1: // Generate invoice
-                    break;
+                    System.out.println("Not yet implemented");
+                    return;
                 
                 case 2: // Mark invoice as paid
-                    break;
+                    // Get all invoices to find which invoice to mark as paid
+                    query = "SELECT * FROM mngo1.Invoice";
+                    count = executeQuery(query, dbconn, Entity.INVOICE);
+                    if (count == 0) {
+                        System.err.println("There are no invoices to select.");
+                    }
+                    else {
+                        // Prompt user for which invoice to mark as paid
+                        int invId = promptUserForInt(selectInvoiceToPayPrompt, keyboard);
+                    }
+                    return;
 
-                case 3: // back
+                case 3: // back to main menu
                     return;
             
                 default:
@@ -326,23 +725,84 @@ public class Interface {
         }
     }
 
-    // Handle support ticket management
-    private static void manageTickets(Scanner keyboard) {
+        /*---------------------------------------------------------------------
+        |  Method manageTickets(keyboard, dbconn)
+        |
+        |  Purpose: manages tickets, including creating support tickets, assigning tickets to agents, and marking tickets as resolved
+        |
+        |  Pre-condition: User is connected to the database and selected UI option 8 to manage tickets
+        |  Post-condition: Tickets are managed successfully based on further input
+        |
+        |  Parameters:
+        |      Scanner keyboard - used to get user input for managing tickets
+        |      Connection dbconn - used to execute SQL statements to manage tickets in the database
+        |
+        |  Returns: None.
+        *-------------------------------------------------------------------*/
+    private static void manageTickets(Scanner keyboard, Connection dbconn) {
         System.out.println(supportInterface);
+        String statement, query;
+        int count;
         
         while (true) {
             int input = keyboard.nextInt();
+            keyboard.nextLine();
             switch (input) {
+
+                    // We must have a secondary prompt to get the correct operation
+                    // Their are 3 operations: Create ticket, assign ticket to agent, mark ticket as resolved.
+                    // Each operation calls the secondary helper method to perform that operation in coordination
+                    // with a SQL statement that is executed to manage tickets
+
                 case 1: // New ticket
-                    break;
+                    // Prompt user for topic of support ticket, then format and execute SQL statement to create a new support ticket with that topic
+                    String topic = promptUserForStr(addTicketTopicPrompt, keyboard);
+                    statement = String.format("INSERT INTO mngo1.Ticket VALUES (%d, %d, %s, %s, %d, %d)", 1, 0, "Unresolved", topic, 1, 1);
+                    executeStmt(statement, dbconn);
+                    return;
                 
                 case 2: // Assign ticket to agent
-                    break;
+                    // Get all tickets to find which ticket to assign to an agent
+                    query = "SELECT * FROM mngo1.Ticket";
+                    count = executeQuery(query, dbconn, Entity.SUPPORT_TICKET);
+                    if (count == 0) {
+                        System.err.println("There are no tickets to select.");
+                        return;
+                    }
+                    else {
+                        // Prompt user for which ticket to assign to an agent
+                        int tid = promptUserForInt(selectTicketForAgentPrompt, keyboard);
+                    }
+
+                        // At this point we have selected the ticket we want to assign
+                        // So we perform a similar operation to assign an agent to the ticket
+
+                    // Get all agents to find which agent to assign the ticket to
+                    query = "SELECT * FROM mngo1.Agent";
+                    count = executeQuery(query, dbconn, Entity.AGENT);
+                    if (count == 0) {
+                        System.err.println("There are no agents to select.");
+                    }
+                    else {
+                        // Prompt user for which agent to assign the ticket to
+                        int aid = promptUserForInt(selectAgentPrompt, keyboard);
+                    }
+                    return;
 
                 case 3: // Complete ticket
-                    break;
+                    // Get all tickets to find which ticket to mark as resolved
+                    query = "SELECT * FROM mngo1.Ticket";
+                    count = executeQuery(query, dbconn, Entity.SUPPORT_TICKET);
+                    if (count == 0) {
+                        System.err.println("There are no tickets to select.");
+                    }
+                    else {
+                        // Prompt user for which ticket to mark as resolved
+                        int tid = promptUserForInt(selectTicketForResolvePrompt, keyboard);
+                    }
+                    return;
             
-                case 4: // back
+                case 4: // back to main menu
                     return;
 
                 default:
@@ -351,4 +811,150 @@ public class Interface {
         }
     }
 
+        /*---------------------------------------------------------------------
+        |  Method executeStmt(statement, dbconn)
+        |
+        |  Purpose: executues a SQL statement 
+        |
+        |  Pre-condition: User is connected to the database and a valid SQL statement is provided as input
+        |  Post-condition: SQL statement is executed successfully against the database
+        |
+        |  Parameters:
+        |      String statement - a valid SQL statement to execute against the database
+        |      Connection dbconn - used to execute the provided SQL statement against the database
+        |      
+        |  Returns: boolean - true if the statement executed successfully, false if there was an error executing the statement
+        *-------------------------------------------------------------------*/
+    private static boolean executeStmt(String statement, Connection dbconn) {
+        try {
+            Statement stmt = dbconn.createStatement();
+            stmt.executeUpdate("COMMIT");
+            System.out.println("DEBUG: This is the query you were going to execute:\n" + statement);
+            return true;
+
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+        /*---------------------------------------------------------------------
+        |  Method executeQuery(query, dbconn, entity)
+        |
+        |  Purpose: Executes a SQL query and returns the number of rows returned
+        |           Additionally prints out some of the data from the returned rows depending on which entity is being queried
+        |
+        |  Pre-condition: User is connected to the database and a valid SQL query is provided as input, along with the matching type of entity being queried
+        |  Post-condition: The SQL query is executed successfully against the database, 
+        |                  the relevant data from the returned rows is printed, and the number of rows returned is provided as output
+        |
+        |  Parameters:
+        |      String query - the SQL query to execute
+        |      Connection dbconn - used to execute the provided SQL query against the database
+        |      Entity entity - the type of entity being queried
+        |
+        |  Returns: int - the number of rows returned by the query
+        *-------------------------------------------------------------------*/
+    private static int executeQuery(String query, Connection dbconn, Entity entity) {
+        int count = 0; // Counts the number of rows returned by the query
+        try {
+            Statement stmt = dbconn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            // Go through each row returned by the query and print out some data depending on the type of entity being queried
+            while (rs.next()) {
+                count++;
+                switch (entity) {
+                    case Entity.USER:
+                        System.out.printf("%d: (name: %s, pass %s, email: %s)",
+                            rs.getInt("userId"), rs.getString("username"), rs.getString("pwd"), rs.getString("email"));
+                        break;
+
+                    case Entity.MESSAGE:
+                        System.out.printf("%d: (content: %s, feedback: %s)",
+                            rs.getInt("messageId"), rs.getString("content"), rs.getString("feedback"));
+                        break;
+
+                    case Entity.CONVERSATION:
+                        System.out.printf("%d: (title: %s)",
+                            rs.getInt("conversationId"), rs.getString("title"));
+                        break;
+                }
+            }
+            return count;
+            
+        } catch (SQLException e) {
+            System.err.println("Error occurred while executing query: " + query);
+        }
+        return count;
+    }
+
+        /*---------------------------------------------------------------------
+        |  Method promptUserForStr(prompt, keyboard)
+        |
+        |  Purpose: prompts the user for a string input and validates the input 
+        |
+        |  Pre-condition: User needs to input a string in response to a prompt
+        |  Post-condition: A valid string input is returned based on the provided prompt and user input
+        |
+        |  Parameters:
+        |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
+        |      Scanner keyboard - the scanner object used to read user input
+        |
+        |  Returns: string - the user input to the scanner, between 1 and 255 characters in length
+        *-------------------------------------------------------------------*/
+    private static String promptUserForStr(String prompt, Scanner keyboard) {
+        boolean syntaxError = false; // To validate user input
+        System.out.print(prompt);    // Print the provided prompt to the user
+        String input = keyboard.next();
+        // If the input is not in valid length, mark as syntax error to prompt user again
+        if (input.length() > 255 || input.length() < 1) 
+            syntaxError = true;
+        // Repeatedly prompt user until they provide a valid input string between 1 and 255 characters in length
+        while (syntaxError) {
+            System.out.println();
+            System.err.print("Error: String must be between length of 1 & 255. Please try again: ");
+            input = keyboard.next();
+            if (input.length() <= 255 && input.length() >= 1)
+                syntaxError = false;
+        }
+        // Once we have valid input, we return that input string
+        return input;
+    }
+
+        /*---------------------------------------------------------------------
+        |  Method promptUserForInt(prompt, keyboard)
+        |
+        |  Purpose: 
+        |
+        |  Pre-condition: User needs to input a integer in response to a prompt
+        |  Post-condition: An integer is returned based on the provided prompt and user input
+        |
+        |  Parameters:
+        |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
+        |      Scanner keyboard - the scanner object used to read user input
+        |
+        |  Returns: 
+        *-------------------------------------------------------------------*/
+    private static int promptUserForInt(String prompt, Scanner keyboard) {
+        boolean syntaxError = false; // To validate user input
+        System.out.print(prompt);    // Print the provided prompt to the user
+        int input = -1;              // Init input to check for type mismatch on the input
+        try {
+            input = keyboard.nextInt();
+            keyboard.nextLine();
+        } catch (InputMismatchException e) {
+            // If the user input is a mismatch (not an integer), we mark it as a syntax error to prompt the user again
+            syntaxError = true;
+        }
+        // Repeatedly prompt user until they provide a valid integer input 
+        while (syntaxError) {
+            System.err.print("Error: Please input an integer: ");
+            try {
+                input = keyboard.nextInt();
+                keyboard.nextLine();
+                syntaxError = false;
+            } catch (InputMismatchException e) {}
+        }
+        // Once we have valid input, we return that input integer
+        return input;
+    }
 }
