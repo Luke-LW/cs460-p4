@@ -38,7 +38,10 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Interface {
-    private enum Entity {USER, MESSAGE, CONVERSATION, WORKSPACE, PERSONA, USER_PROMPT, INVOICE, SUPPORT_TICKET, AGENT};
+    private enum Entity {
+        USER, MESSAGE, CONVERSATION, WORKSPACE, PERSONA, USER_PROMPT, INVOICE, SUPPORT_TICKET, AGENT,
+        SPECIAL_QUERY_1, SPECIAL_QUERY_2, SPECIAL_QUERY_3, SPECIAL_QUERY_4
+    };
 
     private final static String mainInterface =
             "\f----------------------------------------------------\n" +
@@ -51,7 +54,8 @@ public class Interface {
             "6: Subscription tracking\n" +
             "7: Billing operations\n" +
             "8: Create support ticket\n" +
-            "9: Exit\n" +
+            "9: Queries\n" +
+            "10: Exit\n" +
             "----------------------------------------------------\n";
 
     private final static String userAcctInterface =
@@ -170,6 +174,16 @@ public class Interface {
     private final static String selectTicketForResolvePrompt =
         "Select a ticket to resolve: ";
 
+    private final static String queryInterface =
+        "\f----------------------------\n" +
+        "Select a query to answer\n" +
+        "1: For a given user, list all their bookmarked messages across all conversations\n" +
+        "2: List all users who have unpaid invoices\n" +
+        "3: Identify the most helpful persona\n" +
+        "4: (Custom query) Identify the most active users\n" +
+        "5: Back\n" +
+        "----------------------------\n";
+
     private final static String commandError = "Error: Unrecognized Command. Try again:\n";
 
 
@@ -258,6 +272,11 @@ public class Interface {
                     break;
 
                 case 9:
+                    chooseQuery(keyboard, dbconn);
+                    init = true;
+                    break;
+
+                case 10:
                     System.exit(0);
                     break;
 
@@ -304,8 +323,9 @@ public class Interface {
                     String email = promptUserForStr(addUserEmailPrompt, keyboard);
                     String username = promptUserForStr(addUserNamePrompt, keyboard);
                     String password = promptUserForStr(addUserPasswordPrompt, keyboard);
+                    int lid = 1;    // temp
                     // format and execute the SQL statement to add a user account with the provided information
-                    statement = String.format("INSERT INTO mngo.Person VALUES (%d, %s, %s, %s)", 1, username, password, email);
+                    statement = String.format("INSERT INTO mngo1.Person VALUES (%s, %s, %s, %d)", username, password, email, lid);
                     executeStmt(statement, dbconn);
                     return;
                 
@@ -377,8 +397,10 @@ public class Interface {
 
                 case 1: // New conversation
                     String title = promptUserForStr(addConvoTitlePrompt, keyboard);
+                    int userId = 1;
+                    int pid = 1;
                     // format and execute the SQL statement to add a conversation with the provided title
-                    statement = String.format("INSERT INTO mngo1.Conversation VALUES (%d, %s)", 1, title);
+                    statement = String.format("INSERT INTO mngo1.Conversation VALUES (%s, %d, %d)", title, userId, pid);
                     executeStmt(statement, dbconn);
                     return;
                 
@@ -460,7 +482,8 @@ public class Interface {
                 case 1: // New workspace
                     // Prompt user for privacy setting of workspace, then format and execute SQL statement to create a workspace with that privacy setting
                     String privacy = promptUserForStr(addWorkspacePrivacyPrompt, keyboard);
-                    statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, %s)", 1, privacy);
+                    int ownerId = 1;    // temp
+                    statement = String.format("INSERT INTO mngo1.Workspace VALUES (%s, %d)", privacy, ownerId);
                     executeStmt(statement, dbconn);
                     return;
                 
@@ -520,7 +543,7 @@ public class Interface {
                     String name = promptUserForStr(addPersonaNamePrompt, keyboard);
                     String personality = promptUserForStr(addPersonaPersonalityPrompt, keyboard);
                     // Format and execute SQL statement to create new persona with provided inputs
-                    statement = String.format("INSERT INTO mngo1.Persona VALUES (%d, %s, %s)", 1, name, personality);
+                    statement = String.format("INSERT INTO mngo1.Persona VALUES (%s, %s)", name, personality);
                     executeStmt(statement, dbconn);
                     return;
                 
@@ -579,8 +602,9 @@ public class Interface {
                     // Prompt user for instructions and privacy setting for the new prompt template
                     String instructions = promptUserForStr(addPromptInstructionPrompt, keyboard);
                     String privacy = promptUserForStr(addPromptPrivacyPrompt, keyboard);
+                    int userId = 1; // temp
                     // Format and execute SQL statement to create new prompt template with provided inputs
-                    statement = String.format("INSERT INTO mngo1.UserPrompt VALUES (%d, %s, %s)", 1, instructions, privacy);
+                    statement = String.format("INSERT INTO mngo1.UserPrompt VALUES (%s, %s, %d)", instructions, privacy, userId);
                     executeStmt(statement, dbconn);
                     return;
                 
@@ -757,7 +781,9 @@ public class Interface {
                 case 1: // New ticket
                     // Prompt user for topic of support ticket, then format and execute SQL statement to create a new support ticket with that topic
                     String topic = promptUserForStr(addTicketTopicPrompt, keyboard);
-                    statement = String.format("INSERT INTO mngo1.Ticket VALUES (%d, %d, %s, %s, %d, %d)", 1, 0, "Unresolved", topic, 1, 1);
+                    int duration = 0;
+                    int userId = 1;
+                    statement = String.format("INSERT INTO mngo1.Ticket VALUES (%d, %s, %s, %d)", duration, "Unresolved", topic, userId);
                     executeStmt(statement, dbconn);
                     return;
                 
@@ -812,6 +838,130 @@ public class Interface {
     }
 
         /*---------------------------------------------------------------------
+        |  Method chooseQuery(keyboard, dbconn)
+        |
+        |  Purpose: allows you to choose a query to answer based on the data in the DB.
+        |
+        |  Pre-condition: User is connected to the database and selected UI option 9 to choose a query
+        |  Post-condition: The query has executed successfully and the 
+        |
+        |  Parameters:
+        |      Scanner keyboard - used to get user input for selecting a query
+        |      Connection dbconn - used to execute SQL queries in the database
+        |
+        |  Returns: None.
+        *-------------------------------------------------------------------*/
+    private static void chooseQuery(Scanner keyboard, Connection dbconn) {
+        System.out.println(queryInterface);
+        String query;
+        int count;
+
+        while (true) {
+            int input = keyboard.nextInt();
+            keyboard.nextLine();
+            switch (input) {
+
+                    // We now need to prompt the user again to ask them to select a query to execute.
+                    // Query 1: For a given user, list all their bookmarked messages across all conversations, including
+                    //          the conversation title and timestamp.
+                    // Query 2: List all users who have unpaid invoices, including their email, the total amount owed, and
+                    //          the date of their last conversation.
+                    // Query 3: Identify the most helpful persona: list the persona name that has received the highest percentage
+                    //          of "thumbs up" feedback across all conversations linked to it.
+                    // (Custom query)
+                    // Query 4: Find the top 5 users with the most messages sent, including their username, subscription tier,
+                    //          total messages sent, and average message length.
+
+                case 1: // Query 1
+                    // Get all users to select one to execute the query on
+                    query = "SELECT * FROM mngo1.Person";
+                    count = executeQuery(query, dbconn, Entity.USER);
+                    if (count == 0) {
+                        System.err.println("There are no users to select.");
+                    }
+                    else {
+                        // Prompt user for which user to execute query on
+                        int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard);
+                        // Now execute query 1 on the selected user
+                        query = "SELECT b.userId, u.username, c.title, m.message, m.timestamp " +
+                                "FROM mngo1.Bookmark b " +
+                                "JOIN mngo1.Message m ON b.mid = m.mid " +
+                                "JOIN mngo1.Conversation c ON m.cid = c.cid " +
+                                "JOIN mngo1.User u ON b.userId = u.userId " +
+                                "WHERE b.userId = " + userId;
+                        System.out.println(query);
+                        //count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_1);
+                    }
+                    return;
+                
+                case 2: // Query 2
+                    query = "SELECT u.userId, u.email, " +
+                            "    SUM(i.amount) AS total_amount_owed," +
+                            "    MAX(msg.last_conversation_date) AS last_conversation_date" +
+                            "FROM mngo1.User u" +
+                            "JOIN mngo1.BillingRecord br ON u.userId = br.userId" +
+                            "JOIN mngo1.Invoice i ON br.brid = i.brid" +
+                            "LEFT JOIN (" +
+                            "    SELECT c.userId, MAX(m.timestamp) AS last_conversation_date" +
+                            "    FROM mngo1.Message m" +
+                            "    JOIN mngo1.Conversation c ON m.cid = c.cid" +
+                            "    GROUP BY c.userId" +
+                            ") msg ON u.userId = msg.userId" +
+                            "WHERE i.status = 'Unpaid'" +
+                            "GROUP BY u.userId, u.email" +
+                            "HAVING SUM(i.amount) > 0";
+                    //count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_2);
+                    return;
+
+                case 3: // Query 3
+                    query = "WITH PersonaStats AS (" +
+                            "    SELECT" +
+                            "        p.pid, p.name AS persona_name, COUNT(*) AS total_ai_messages, " +
+                            "        SUM(CASE WHEN m.rating = 1 THEN 1 ELSE 0 END) AS positive_ratings, " +
+                            "        SUM(CASE WHEN m.rating = -1 THEN 1 ELSE 0 END) AS negative_ratings" +
+                            "    FROM mngo1.Persona p" +
+                            "    JOIN mngo1.Conversation c ON p.pid = c.pid" +
+                            "    JOIN mngo1.Message m      ON c.cid = m.cid" + 
+                            "    WHERE m.sender = 'AI'" +
+                            "      AND m.rating IS NOT NULL " +
+                            "      AND m.rating IN (1, -1)" +
+                            "    GROUP BY p.pid, p.name" +
+                            ")" +
+                            "SELECT" +
+                            "    persona_name, thumbs_up_count, total_feedback," +
+                            "    ROUND(100.0 * thumbs_up_count / NULLIF(total_feedback, 0), 2) AS thumbs_up_percentage" +
+                            "FROM PersonaStats" +
+                            "ORDER BY thumbs_up_percentage DESC, total_feedback DESC" +
+                            "FETCH FIRST 1 ROW ONLY";
+                    //count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_3);
+                    return;
+
+                case 4: // Query 4
+                    query = "SELECT" +
+                            "    u.username, mbr.tier AS membership_tier, COUNT(*) AS total_messages_sent," +
+                            "    ROUND(AVG(LENGTH(m.message)), 2) AS avg_message_length_chars," +
+                            "    MAX(m.timestamp) AS last_message_date, COUNT(DISTINCT c.cid) AS num_conversations" +
+                            "FROM mngo1.User u" +
+                            "JOIN mngo1.Membership mbr ON u.mid = mbr.mid" + 
+                            "JOIN mngo1.Conversation c ON u.userId = c.userId" + 
+                            "JOIN mngo1.Message m ON c.cid = m.cid" + 
+                            "WHERE m.sender = 'User'" + 
+                            "GROUP BY u.username, mbr.tier" + 
+                            "ORDER BY total_messages_sent DESC, avg_message_length_chars DESC" + 
+                            "FETCH FIRST 5 ROWS ONLY";
+                    //count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_4);
+                    return;
+
+                case 5: // Back to main menu
+                    return;
+            
+                default:
+                    System.out.println(commandError);
+            }
+        }
+    }
+
+        /*---------------------------------------------------------------------
         |  Method executeStmt(statement, dbconn)
         |
         |  Purpose: executues a SQL statement 
@@ -828,11 +978,13 @@ public class Interface {
     private static boolean executeStmt(String statement, Connection dbconn) {
         try {
             Statement stmt = dbconn.createStatement();
+            stmt.execute(statement);
             stmt.executeUpdate("COMMIT");
-            System.out.println("DEBUG: This is the query you were going to execute:\n" + statement);
+            System.out.println("Executed statement: " + statement);
             return true;
 
         } catch (SQLException e) {
+            System.err.println("Error executing statement: " + statement);
             return false;
         }
     }
@@ -863,19 +1015,49 @@ public class Interface {
             while (rs.next()) {
                 count++;
                 switch (entity) {
-                    case Entity.USER:
+                    case USER:
                         System.out.printf("%d: (name: %s, pass %s, email: %s)",
                             rs.getInt("userId"), rs.getString("username"), rs.getString("pwd"), rs.getString("email"));
                         break;
 
-                    case Entity.MESSAGE:
+                    case MESSAGE:
                         System.out.printf("%d: (content: %s, feedback: %s)",
                             rs.getInt("messageId"), rs.getString("content"), rs.getString("feedback"));
                         break;
 
-                    case Entity.CONVERSATION:
+                    case CONVERSATION:
                         System.out.printf("%d: (title: %s)",
                             rs.getInt("conversationId"), rs.getString("title"));
+                        break;
+
+                    case WORKSPACE:
+                        break;
+
+                    case PERSONA:
+                        break;
+
+                    case USER_PROMPT:
+                        break;
+
+                    case INVOICE:
+                        break;
+
+                    case SUPPORT_TICKET:
+                        break;
+
+                    case AGENT:
+                        break;
+
+                    case SPECIAL_QUERY_1:   // Special format for query 1
+                        break;
+
+                    case SPECIAL_QUERY_2:   // Special format for query 2
+                        break;
+
+                    case SPECIAL_QUERY_3:   // Special format for query 3
+                        break;
+
+                    case SPECIAL_QUERY_4:   // Special format for query 4
                         break;
                 }
             }
