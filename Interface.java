@@ -64,8 +64,8 @@ public class Interface {
         "1: Add account\n" +
         "2: Update account\n" +
         "3: Delete account\n" +
-        "4: update address\n" +
-        "5: update payment method\n" +
+        "4: Update address\n" +
+        "5: Update payment method\n" +
         "6: Back\n" +
         "------------------------\n";
     private final static String addUserEmailPrompt =
