@@ -1142,48 +1142,81 @@ public class Interface {
                 count++;
                 switch (entity) {
                     case USER:
-                        System.out.printf("%d: (name: %s, pass %s, email: %s)",
-                            rs.getInt("userId"), rs.getString("username"), rs.getString("pwd"), rs.getString("email"));
+                        System.out.printf("%d: (name: %s, pass %s, email: %s)\n",
+                            rs.getInt("userId"), rs.getString("username"), rs.getString("pwd"), rs.getString("email")
+                          );
                         break;
 
                     case MESSAGE:
-                        System.out.printf("%d: (content: %s, feedback: %s)",
-                            rs.getInt("messageId"), rs.getString("content"), rs.getString("feedback"));
+                        System.out.printf("%d: (message: %s, sender: %s, rating: %d, ratingText: %s, cid: %d)\n",
+                            rs.getInt("mid"), rs.getString("message"), rs.getString("sender"), rs.getInt("rating"), rs.getString("ratingText"), rs.getInt("cid")
+                          );
                         break;
 
                     case CONVERSATION:
-                        System.out.printf("%d: (title: %s)",
-                            rs.getInt("conversationId"), rs.getString("title"));
+                        System.out.printf("%d: (title: %s, userId: %d, pid: %d)\n",
+                            rs.getInt("cid"), rs.getString("title"), rs.getInt("userId"), rs.getInt("pid")
+                          );
                         break;
 
                     case WORKSPACE:
+                        System.out.printf("%d: (privacy: %s, ownerId: %d)\n",
+                            rs.getInt("wid"), rs.getString("privacy"), rs.getInt("ownerId")
+                          );
                         break;
 
                     case PERSONA:
+                        System.out.printf("%d: (name: %s, personality: %s)\n",
+                            rs.getInt("pid"), rs.getString("name"), rs.getString("personality")
+                        );
                         break;
 
                     case USER_PROMPT:
+                        System.out.printf("%d: (instructions: %s, privacy: %s, userId: %d)\n",
+                            rs.getInt("upid"), rs.getString("instructions"), rs.getString("privacy"), rs.getInt("userId")
+                        );
                         break;
 
                     case INVOICE:
+                        System.out.printf("%d: (status: %s, amount: %d)\n",
+                            rs.getInt("invid"), rs.getString("status"), rs.getInt("amount")
+                        );
                         break;
 
                     case SUPPORT_TICKET:
+                        System.out.printf("%d: (duration: %d, outcome: %s, topic: %s, userId: %d)\n",
+                            rs.getInt("tid"), rs.getInt("duration"), rs.getString("outcome"), rs.getString("topic"), rs.getInt("userId")
+                        );
                         break;
 
                     case AGENT:
+                        System.out.printf("%d: (name: %s)\n",
+                            rs.getInt("aid"), rs.getString("name")
+                        );
                         break;
 
                     case SPECIAL_QUERY_1:   // Special format for query 1
+                        System.out.printf("()\n"
+
+                        );
                         break;
 
                     case SPECIAL_QUERY_2:   // Special format for query 2
+                        System.out.printf("()\n"
+
+                        );
                         break;
 
                     case SPECIAL_QUERY_3:   // Special format for query 3
+                        System.out.printf("()\n"
+
+                        );
                         break;
 
                     case SPECIAL_QUERY_4:   // Special format for query 4
+                        System.out.printf("()\n"
+
+                        );
                         break;
                 }
             }
@@ -1212,7 +1245,7 @@ public class Interface {
     private static String promptUserForStr(String prompt, Scanner keyboard) {
         boolean syntaxError = false; // To validate user input
         System.out.print(prompt);    // Print the provided prompt to the user
-        String input = keyboard.next();
+        String input = keyboard.nextLine().strip();
         // If the input is not in valid length, mark as syntax error to prompt user again
         if (input.length() > 255 || input.length() < 1) 
             syntaxError = true;
