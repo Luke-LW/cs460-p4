@@ -515,8 +515,8 @@ public class Setup {
      * multiple user prompts.
      * 
      * -- Fields --
-     * @field upid (CK)
-     * @field wid (CK)
+     * @field upid (CK) (FK)
+     * @field wid (CK) (FK)
      * 
      * -- Constraints --
      */
@@ -536,8 +536,8 @@ public class Setup {
      * multiple template prompts.
      * 
      * -- Fields --
-     * @field tpid (CK)
-     * @field wid (CK)
+     * @field tpid (CK) (FK)
+     * @field wid (CK) (FK)
      * 
      * -- Constraints --
      */
@@ -557,8 +557,8 @@ public class Setup {
      * multiple conversations
      * 
      * -- Fields --
-     * @field cid (CK)
-     * @field wid (CK)
+     * @field cid (CK) (FK)
+     * @field wid (CK) (FK)
      * 
      * -- Constraints --
      */
@@ -578,8 +578,8 @@ public class Setup {
      * categories having multiple user prompts.
      * 
      * -- Fields --
-     * @field pcid (CK)
-     * @field upid (CK)
+     * @field pcid (CK) (FK)
+     * @field upid (CK) (FK)
      * 
      * -- Constraints --
      */
