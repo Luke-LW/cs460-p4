@@ -104,7 +104,8 @@ public class Interface {
         "Manage Workspaces\n" +
         "1: Create workspace\n" +
         "2: Modify workspace\n" +
-        "3: Back\n" +
+        "3: Add conversation to workspace\n" +
+        "4: Back\n" +
         "------------------------\n";
     private final static String addWorkspacePrivacyPrompt =
         "Select a privacy option for this workspace (private/public): ";
@@ -870,7 +871,102 @@ public class Interface {
                     }
                     return;
 
-                case 3: // back to main menu
+                case 3: // Add conversation to workspace
+                    {
+                        // Show all workspaces
+                        String wsQuery = "SELECT * FROM mngo1.Workspace";
+                        executeQuery(wsQuery, dbconn, Entity.WORKSPACE);
+
+                        int wid = promptUserForInt("Select workspace to add conversation to: ", 
+                                                 keyboard, dbconn, Entity.WORKSPACE);
+
+                        // Show all conversations
+                        String convoQuery = """
+                            SELECT c.cid, c.title, c.userId, c.pid, p.username 
+                            FROM mngo1.Conversation c 
+                            JOIN mngo1.Person p ON c.userId = p.userId 
+                            ORDER BY c.cid
+                            """;
+                        executeQuery(convoQuery, dbconn, Entity.CONVERSATION);
+
+                        int cid = promptUserForInt("Select conversation to add: ", 
+                                                 keyboard, dbconn, Entity.CONVERSATION);
+
+                        try {
+                            Statement stmt = dbconn.createStatement();
+
+                            // Get owner of the conversation
+                            ResultSet rs = stmt.executeQuery(
+                                "SELECT userId FROM mngo1.Conversation WHERE cid = " + cid);
+                            if (!rs.next()) {
+                                System.err.println("Conversation not found.");
+                                break;
+                            }
+                            int convoOwnerId = rs.getInt("userId");
+
+                            // Get owner of the workspace
+                            rs = stmt.executeQuery(
+                                "SELECT ownerId FROM mngo1.Workspace WHERE wid = " + wid);
+                            if (!rs.next()) {
+                                System.err.println("Workspace not found.");
+                                break;
+                            }
+                            int workspaceOwnerId = rs.getInt("ownerId");
+
+                            // Check if user is member of workspace OR is the owner
+                            String memberCheck = """
+                                SELECT COUNT(*) FROM mngo1.UserWorkspace 
+                                WHERE wid = """ + wid + " AND userId = " + convoOwnerId;
+
+                            rs = stmt.executeQuery(memberCheck);
+                            rs.next();
+                            int isMember = rs.getInt(1);
+
+                            boolean canAdd = (isMember > 0) || (convoOwnerId == workspaceOwnerId);
+
+                            if (!canAdd) {
+                                System.err.println("Cannot add conversation.");
+                                System.err.println("User " + convoOwnerId + " is not a member of workspace " + wid + 
+                                                 " and is not the owner.");
+                                break;
+                            }
+
+                            // Add to junction table
+                            String insertStmt = String.format(
+                                "INSERT INTO mngo1.ConversationWorkspace (cid, wid) VALUES (%d, %d)", 
+                                cid, wid);
+
+                            executeStmt(insertStmt, dbconn);
+                            System.out.println("Conversation " + cid + " added to workspace " + wid);
+
+                        } catch (SQLException e) {
+                            if (e.getMessage().toLowerCase().contains("unique") || 
+                                e.getMessage().toLowerCase().contains("primary key")) {
+                                System.err.println("This conversation is already in that workspace.");
+                            } else {
+                                System.err.println("Database error: " + e.getMessage());
+                            }
+                        }
+                    }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        try {
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            } else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
+                        } catch (InputMismatchException e) {
+                            keyboard.nextLine();
+                            System.err.println("Please enter 1.");
+                        }
+                    }
+                    return;
+
+                case 4: // back to main menu
                     return;
             
                 default:
@@ -1810,7 +1906,7 @@ public class Interface {
                         break;
 
                     case WORKSPACE:
-                        System.out.printf("%d: (privacy: %s, ownerId: %d)\n",
+                        System.out.printf("%d: (privacy: %s, userId: %d)\n",
                             rs.getInt("wid"), rs.getString("privacy"), rs.getInt("ownerId")
                           );
                         break;
