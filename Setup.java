@@ -610,21 +610,124 @@ public class Setup {
     /**
      * @trigger Deleting a user must fail if there are unpaid invoices or open support tickets.
      */
-    public static final String UnpaidInvoiceTrigger = "";
+    public static final String UnpaidInvoiceTrigger = 
+        // Trigger before delete on a user
+        "CREATE OR REPLACE TRIGGER prevent_user_delete " +
+        "BEFORE DELETE ON mngo1.Person " +
+        "FOR EACH ROW " +
+        // For each user being deleted, declare variables to count unpaid invoices and open tickets
+        "DECLARE " +
+        "   unpaid_count NUMBER; " +
+        "   open_ticket_count NUMBER; " +
+        // Begin the trigger
+        "BEGIN " +
+            // Check for unpaid invoices by joining the Invoice and BillingRecord tables
+        "   SELECT COUNT(*) INTO unpaid_count " +
+        "   FROM mngo1.Invoice i " +
+        "   JOIN mngo1.BillingRecord b ON i.brid = b.brid " +
+        "   WHERE b.userId = :OLD.userId " +
+        "   AND i.status = 'unpaid'; " +
+        "" +
+            // Check for open support tickets in the Ticket table
+        "   SELECT COUNT(*) INTO open_ticket_count " +
+        "   FROM mngo1.Ticket " +
+        "   WHERE userId = :OLD.userId " +
+        "   AND outcome = 'Waiting'; " +
+        "" +
+            // If there are any unpaid invoices or open tickets, raise an error to prevent deletion
+        "   IF unpaid_count > 0 OR open_ticket_count > 0 THEN " +
+        "       RAISE_APPLICATION_ERROR(-20001, " +
+        "       'Cannot delete user: has unpaid invoices or open support tickets.'); " +
+        "   END IF; " +
+        "END;";
     
     /**
-     * @trigger When a user adds a UserPrompt or a Conversation, check that
+     * @trigger When a user adds a UserPrompt, check that
      *      they are actually a member of that workspace in:
      *          UserWorkspace
      */
-    public static final String unknownUserInWorkspaceTrigger = "";
+    public static final String unknownUserPromptInWorkspaceTrigger = 
+        // Trigger before insert into UserPrompt
+        "CREATE OR REPLACE TRIGGER enforce_workspace_userprompt " +
+        "BEFORE INSERT ON mngo1.UserPrompt " +
+        "FOR EACH ROW " +
+        // For each UserPrompt being added, declare a variable to count the number of workspace
+        "DECLARE " +
+        "   member_count NUMBER; " +
+        // Begin the trigger
+        "BEGIN " +
+            // Check that the user adding the UserPrompt is a member of the workspace
+            // they are trying to add to (member_count should be 1 if they are a member, 0 if not)
+        "   SELECT COUNT(*) INTO member_count " +
+        "   FROM mngo1.Workspace " +
+        "   WHERE userId = :NEW.userId " +
+        "   AND wid = (SELECT wid FROM mngo1.UserPrompt WHERE upid = :NEW.upid); " +
+        // If the member count is 0, it means the user is not a member of the workspace, so raise an error to prevent insertion
+        "   IF member_count = 0 THEN " +
+        "       RAISE_APPLICATION_ERROR(-20002, " +
+        "       'User is not a member of the specified workspace.'); " +
+        "   END IF; " +
+        "END;";
+    
+    /**
+     * @trigger When a user adds a Conversation, check that
+     *      they are actually a member of that workspace in:
+     *          UserWorkspace
+     */
+    public static final String unknownConversationInWorkspaceTrigger = 
+        // Trigger before insert into Conversation
+        "CREATE OR REPLACE TRIGGER enforce_workspace_conversation " +
+        "BEFORE INSERT ON mngo1.Conversation " +
+        "FOR EACH ROW " +
+        // For each Conversation being added, declare a variable to count the number of workspace
+        "DECLARE " +
+        "   member_count NUMBER; " +
+        // Begin the trigger
+        "BEGIN " +
+            // Check that the user adding the Conversation is a member of the workspace
+            // they are trying to add to (member_count should be 1 if they are a member, 0 if not)
+        "   SELECT COUNT(*) INTO member_count " +
+        "   FROM mngo1.Workspace " +
+        "   WHERE userId = :NEW.userId " +
+        "   AND wid = (SELECT wid FROM mngo1.Conversation WHERE cid = :NEW.cid); " +
+        // If the member count is 0, it means the user is not a member of the workspace, so raise an error to prevent insertion
+        "   IF member_count = 0 THEN " +
+        "       RAISE_APPLICATION_ERROR(-20002, " +
+        "       'User is not a member of the specified workspace.'); " +
+        "   END IF; " +
+        "END;";
+
     
     /**
      * @trigger when a persona is 'ATTEMPTING' to be deleted, check that no more
      *      than 5 conversations using it (abort deletion if so). Then set the
      *      persona of any conversations using it to NULL
      */
-    public static final String deletePersonaTrigger = "";
+    public static final String deletePersonaTrigger = 
+        // Trigger on personal deletion
+        "CREATE OR REPLACE TRIGGER prevent_persona_delete " +
+        "BEFORE DELETE ON mngo1.Persona " +
+        "FOR EACH ROW " +
+        // For each persona being deleted, declare a variable to count the number of conversations using that persona
+        "DECLARE " +
+        "   convo_count NUMBER; " +
+        // Begin the trigger
+        "BEGIN " +
+            // Get how many conversations are using this persona
+        "   SELECT COUNT(*) INTO convo_count " +
+        "   FROM mngo1.Conversation " +
+        "   WHERE pid = :OLD.pid; " +
+        // If the persona is being used by more than 5 conversations, raise an error to prevent deletion
+        "   IF convo_count > 5 THEN " +
+        "       RAISE_APPLICATION_ERROR(-20003, " +
+        "       'Cannot delete persona: more than 5 conversations are using it.'); " +
+        "   END IF; " +
+        // If their are 5 of fewer conversation using the persona, allow deletion but 
+        // Set any conversations using that personaID to have NULL pid
+        "   UPDATE mngo1.Conversation " +
+        "   SET pid = NULL " +
+        "   WHERE pid = :OLD.pid; " +
+        "END;";
 
     
 
@@ -642,6 +745,8 @@ public class Setup {
         PersonTable, TicketTable, BillingRecordTable, InvoiceTable, ConversationTable, MessageTable,
         BookmarkTable, WorkspaceTable, UserPromptTable, UserPromptWorkspaceTable,
         ConversationwWorkspaceTable, PromptCategoryTable, PromptCategoryUserPromptTable,
-        TemplatePromptWorkspaceTable, UserWorkspaceTable
+        TemplatePromptWorkspaceTable, UserWorkspaceTable,
+
+        UnpaidInvoiceTrigger, unknownUserPromptInWorkspaceTrigger, unknownConversationInWorkspaceTrigger, deletePersonaTrigger
     };
 }
