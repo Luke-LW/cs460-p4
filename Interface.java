@@ -39,7 +39,7 @@ import java.util.Scanner;
 
 public class Interface {
     private enum Entity {
-        USER, MESSAGE, CONVERSATION, WORKSPACE, PERSONA, USER_PROMPT, INVOICE, SUPPORT_TICKET, AGENT,
+        USER, MESSAGE, CONVERSATION, WORKSPACE, PERSONA, USER_PROMPT, INVOICE, SUPPORT_TICKET, AGENT, BILLING_RECORD, 
         SPECIAL_QUERY_1, SPECIAL_QUERY_2, SPECIAL_QUERY_3, SPECIAL_QUERY_4, SUBSCRIPTION_TIER, RATING_VALUE, LANGUAGE
     };
 
@@ -64,7 +64,9 @@ public class Interface {
         "1: Add account\n" +
         "2: Update account\n" +
         "3: Delete account\n" +
-        "4: Back\n" +
+        "4: update address\n" +
+        "5: update payment method\n" +
+        "6: Back\n" +
         "------------------------\n";
     private final static String addUserEmailPrompt =
         "Enter an email for the user: ";
@@ -132,15 +134,22 @@ public class Interface {
         "\f------------------------\n" +
         "Prompt Library\n" +
         "1: Add prompt template\n" +
-        "2: Update prompt template\n" +
-        "3: Back\n" +
+        "2: Update prompt template privacy\n" +
+        "3: Update prompt template instruction\n" +
+        "4: Back\n" +
         "------------------------\n";
     private final static String addPromptPrivacyPrompt = 
         "Select a privacy option for this prompt: ";
     private final static String addPromptInstructionPrompt =
         "Enter the instructions for this prompt: ";
     private final static String selectPromptPrompt =
-        "Select a prompt template to update: ";
+        "Select a prompt template to update privacy: ";
+    private final static String selectPromptInstructionPrompt =
+        "Select a prompt template to update instruction: ";
+    private final static String updatePromptPrivacyPrompt =
+        "What is the new privacy ('public', 'private'): ";
+    private final static String updatePromptInstructionPrompt = 
+        "What is the new instruction: ";
 
     private final static String subscriptionInterface =
         "\f------------------------\n" +
@@ -163,6 +172,15 @@ public class Interface {
         "------------------------\n"; 
     private final static String selectInvoiceToPayPrompt = 
         "Select an invoice to mark as paid: ";
+    private final static String selectBillingRecordAddressPrompt =
+        "Select a billing record to update the address: ";
+    private final static String updateBillingAddress =
+        "What is the new address: ";
+    private final static String selectBillingRecordMethodPrompt = 
+        "Select a billing record to update the pay method: ";
+    private final static String updateBillingMethod =
+        "What is the new pay method ('credit', 'debit', 'cash', 'check', 'other'): ";
+
 
     private final static String supportInterface =
         "\f------------------------\n" +
@@ -365,6 +383,12 @@ public class Interface {
                         statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', 50, %d, 1)", newId, username, password, email, lid);
                         executeStmt(statement, dbconn);
                         System.out.println("User account created successfully.");
+
+                        // also get them a new billing record
+                        idQuery = "SELECT MAX(brid) FROM mngo1.BillingRecord";
+                        int newBrid = getNextId(idQuery, dbconn);
+                        statement = String.format("INSERT INTO mngo1.BillingRecord VALUES (%d, NULL, NULL, %d)", newBrid, newId);
+                        executeStmt(statement, dbconn);
                     }
                     // Hold the screen to see result before returning to main menu
                     exit = true;
@@ -467,7 +491,69 @@ public class Interface {
                         }
                     }
                     return;
-                case 4: // back to main menu
+                case 4: // update address
+                    // Get all users and print out some of their information so the user can select which account to update based on that information
+                    query = "SELECT * FROM mngo1.BillingRecord";
+                    count = executeQuery(query, dbconn, Entity.BILLING_RECORD);
+                    // If there are no billing records, skip
+                    if (count == 0)
+                        System.err.println("There are no billing records to select.");
+                    else {
+                        // If user exists to update, call helper method to prompt user for specific user 
+                        int brid = promptUserForInt(selectBillingRecordAddressPrompt, keyboard, dbconn, Entity.BILLING_RECORD);
+                        
+                        // prompt them for a new pay address
+                        
+                        String newAddress = promptUserForStr(updateBillingAddress, keyboard);
+                        statement = String.format("UPDATE mngo1.BillingRecord SET payaddress = '%s' WHERE brid = %d", newAddress, brid);
+                        executeStmt(statement, dbconn);
+                        System.out.println("User account updated successfully.");
+                    }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
+                    return;
+                case 5: // update pay method
+                    // Get all users and print out some of their information so the user can select which account to update based on that information
+                    query = "SELECT * FROM mngo1.BillingRecord";
+                    count = executeQuery(query, dbconn, Entity.BILLING_RECORD);
+                    // If there are no billing records, skip
+                    if (count == 0)
+                        System.err.println("There are no billing records to select.");
+                    else {
+                        // If user exists to update, call helper method to prompt user for specific user 
+                        int brid = promptUserForInt(selectBillingRecordMethodPrompt, keyboard, dbconn, Entity.BILLING_RECORD);
+                        
+                        // prompt them for a new pay address
+                        
+                        String newAddress = promptUserForStr(updateBillingMethod, keyboard);
+                        statement = String.format("UPDATE mngo1.BillingRecord SET paymethod = '%s' WHERE brid = %d", newAddress, brid);
+                        executeStmt(statement, dbconn);
+                        System.out.println("User account updated successfully.");
+                    }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
+                    return;
+                case 6: // back to main menu
                     return;
             
                 default:
@@ -922,7 +1008,7 @@ public class Interface {
                     }
                     return;
                 
-                case 2: // Update prompt template
+                case 2: // Update prompt template privacy
                     // Get all prompt templates to find which prompt template to update
                     query = "SELECT * FROM mngo1.UserPrompt";
                     count = executeQuery(query, dbconn, Entity.USER_PROMPT);
@@ -932,6 +1018,39 @@ public class Interface {
                     else {
                         // Prompt user for which prompt template to update
                         int upid = promptUserForInt(selectPromptPrompt, keyboard, dbconn, Entity.USER_PROMPT);
+                        String newPrivacy = promptUserForStr(updatePromptPrivacyPrompt, keyboard);
+                        statement = String.format("UPDATE mngo1.UserPrompt SET privacy = '%s' WHERE upid = %d", newPrivacy, upid);
+                        executeStmt(statement, dbconn);
+                        System.out.println("Successfully updated privacy.");
+                    }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
+                    return;
+                
+                case 3:
+                    // Get all prompt templates to find which prompt template to update
+                    query = "SELECT * FROM mngo1.UserPrompt";
+                    count = executeQuery(query, dbconn, Entity.USER_PROMPT);
+                    if (count == 0) {
+                        System.err.println("There are no prompt templates to select.");
+                    }
+                    else {
+                        // Prompt user for which prompt template to update
+                        int upid = promptUserForInt(selectPromptInstructionPrompt, keyboard, dbconn, Entity.USER_PROMPT);
+                        String newInstruction = promptUserForStr(updatePromptInstructionPrompt, keyboard);
+                        statement = String.format("UPDATE mngo1.UserPrompt SET instructions = '%s' WHERE upid = %d", newInstruction, upid);
+                        executeStmt(statement, dbconn);
+                        System.out.println("Successfully updated instruction.");
                     }
                     exit = true;
                     System.out.println("\nEnter 1 to return to main menu");
@@ -947,7 +1066,7 @@ public class Interface {
                     }
                     return;
 
-                case 3: // back to main menu
+                case 4: // back to main menu
                     return;
             
                 default:
@@ -1104,6 +1223,14 @@ public class Interface {
                     // with a SQL statement that is executed to manage billing
 
                 case 1: // Generate invoice
+                    query = "SELECT * FROM mngo1.Person";
+                    count = executeQuery(query, dbconn, Entity.USER);
+                    // If there are no users, we can't update anything, so we print an error message and return to the previous menu
+                    if (count == 0) {
+                        System.err.println("There are no users to select.");
+                        return;
+                    }
+
                     int userIdForInvoice = promptUserForInt("Enter userId to generate invoice for: ", keyboard, dbconn, Entity.USER);
                     // Simple invoice generation
                     String invQuery = "SELECT NVL(MAX(invid), 0) + 1 FROM mngo1.Invoice";
@@ -1629,6 +1756,11 @@ public class Interface {
                         );
                         break;
 
+                    case BILLING_RECORD:
+                        System.out.printf("%d: (payaddress: %s, paymethod: %s, userId: %d)\n",
+                            rs.getInt("brid"), rs.getString("payaddress"), rs.getString("paymethod"), rs.getInt("userId"));
+                        break;
+
                     case INVOICE:
                         System.out.printf("%d: (status: %s, amount: %d)\n",
                             rs.getInt("invid"), rs.getString("status"), rs.getInt("amount")
@@ -1768,6 +1900,11 @@ public class Interface {
               tableId = "mngo1.Persona";
               pk = "pid";
               break;
+
+          case BILLING_RECORD:
+              tableId = "mngo1.BillingRecord";
+              pk = "brid";
+              break;
           
           case INVOICE:
               tableId = "mngo1.Invoice";
@@ -1833,15 +1970,14 @@ public class Interface {
 
             try {
                 String query = String.format("SELECT * FROM %s WHERE %s = %d",
-                tableId, pk, input
-            );
-            Statement stmt = dbconn.createStatement();
-            ResultSet rs = stmt.executeQuery(query);
+                tableId, pk, input);
+                Statement stmt = dbconn.createStatement();
+                ResultSet rs = stmt.executeQuery(query);
 
-            if (rs.next())
-                break;
-            else 
-                msg = "The selected number does not correspond to an entry. Try again: ";
+                if (rs.next())
+                    break;
+                else 
+                    msg = "The selected number does not correspond to an entry. Try again: ";
             } catch (SQLException e) {
                 msg = "There was an error verifying your selection, please try again: ";
                 System.err.println(e);
