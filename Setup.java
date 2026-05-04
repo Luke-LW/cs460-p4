@@ -806,9 +806,9 @@ public class Setup {
             // Check that the user adding the UserPrompt is a member of the workspace
             // they are trying to add to (member_count should be 1 if they are a member, 0 if not)
         "   SELECT COUNT(*) INTO member_count " +
-        "   FROM mngo1.UserWorkspace " +
-        "   WHERE userId = :NEW.userId " +
-        "   AND wid = (SELECT wid FROM mngo1.UserPrompt WHERE upid = :NEW.upid); " +
+        "   FROM mngo1.UserWorkspace uw" +
+        "   JOIN mngo1.UserPrompt up ON uw.userId = up.userId " +
+        "   WHERE up.upid = :NEW.upid AND uw.wid = :NEW.wid; " +
         // If the member count is 0, it means the user is not a member of the workspace, so raise an error to prevent insertion
         "   IF member_count = 0 THEN " +
         "       RAISE_APPLICATION_ERROR(-20002, " +
@@ -834,9 +834,9 @@ public class Setup {
             // Check that the user adding the Conversation is a member of the workspace
             // they are trying to add to (member_count should be 1 if they are a member, 0 if not)
         "   SELECT COUNT(*) INTO member_count " +
-        "   FROM mngo1.Workspace " +
-        "   WHERE userId = :NEW.userId " +
-        "   AND wid = (SELECT wid FROM mngo1.Conversation WHERE cid = :NEW.cid); " +
+        "   FROM mngo1.UserWorkspace uw" +
+        "   JOIN mngo1.Conversation c ON uw.userId = c.userId " +
+        "   WHERE c.cid = :NEW.cid AND uw.wid = :NEW.wid; " +
         // If the member count is 0, it means the user is not a member of the workspace, so raise an error to prevent insertion
         "   IF member_count = 0 THEN " +
         "       RAISE_APPLICATION_ERROR(-20002, " +
@@ -868,11 +868,6 @@ public class Setup {
         "       RAISE_APPLICATION_ERROR(-20003, " +
         "       'Cannot delete persona: more than 5 conversations are using it.'); " +
         "   END IF; " +
-        // If their are 5 of fewer conversation using the persona, allow deletion but 
-        // Set any conversations using that personaID to have NULL pid
-        "   UPDATE mngo1.Conversation " +
-        "   SET pid = NULL " +
-        "   WHERE pid = :OLD.pid; " +
         "END;";
 
     
