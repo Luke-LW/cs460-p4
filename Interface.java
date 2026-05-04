@@ -11,7 +11,7 @@
  *       Purpose:   Provide a User Interface for performing the neccessary database operations
  *                  for the DBMS of the AI messaging platform.
  * 
- *    Description:  The Iterface centers around a series of menus that the user can navigate 
+ *    Description:  The Interface centers around a series of menus that the user can navigate 
  *                  through with the numpad (1-10) to perform the required operations for managing the database. 
  *                  The main menu contains the 8 neccessary functionalities as decribed in the spec
  *                  Each functionality/operation calls its own helper method to perform that operation

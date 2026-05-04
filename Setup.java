@@ -848,8 +848,6 @@ public class Setup {
         "PURGE RECYCLEBIN",
         "DROP TRIGGER mngo1.enforce_workspace_conversation",
         "PURGE RECYCLEBIN",
-        "DROP TRIGGER mngo1.prevent_persona_delete",
-        "PURGE RECYCLEBIN",
     };
 
     public static final String[] CreateTriggers = {
