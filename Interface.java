@@ -104,17 +104,19 @@ public class Interface {
         "Manage Workspaces\n" +
         "1: Create workspace\n" +
         "2: Modify workspace\n" +
-        "3: Back\n" +
+        "3: View workspace members\n" +
+        "4: Back\n" +
         "------------------------\n";
     private final static String addWorkspacePrivacyPrompt =
         "Select a privacy option for this workspace (private/public): ";
     private final static String selectWorkspacePrompt =
-        "Select a workspace to modify: ";
+        "Select a workspace: ";
     private final static String modifyWorkspaceInterface =
         "\nWhat would you like to do?\n" +
         "1: Change privacy setting\n" +
         "2: Change owner\n" +
-        "3: Back\n";
+        "3: Add member\n" +
+        "4: Back\n";
 
     private final static String personaInterface =
         "\f------------------------\n" +
@@ -325,20 +327,20 @@ public class Interface {
         }
     }
 
-        /*---------------------------------------------------------------------
-        |  Method manageUserAcct(keyboard, dbconn)
-        |
-        |  Purpose: manage user accounts, including creating, updating, and deleting accounts
-        |
-        |  Pre-condition: User is connected to the database and selected UI option 1 to manage user accounts
-        |  Post-condition: User accounts are managed successfully based on further input
-        |
-        |  Parameters:
-        |      Scanner keybaord - used to get user input for managing user accounts
-        |      Connection dbconn - used to execute SQL statements to manage user accounts in the database
-        |      
-        |  Returns: None.
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method manageUserAcct(keyboard, dbconn)
+    |
+    |  Purpose: manage user accounts, including creating, updating, and deleting accounts
+    |
+    |  Pre-condition: User is connected to the database and selected UI option 1 to manage user accounts
+    |  Post-condition: User accounts are managed successfully based on further input
+    |
+    |  Parameters:
+    |      Scanner keybaord - used to get user input for managing user accounts
+    |      Connection dbconn - used to execute SQL statements to manage user accounts in the database
+    |      
+    |  Returns: None.
+    *-------------------------------------------------------------------*/
     private static void manageUserAcct(Scanner keyboard, Connection dbconn) {
         System.out.println(userAcctInterface);
         int count;
@@ -567,21 +569,21 @@ public class Interface {
         }
     }
 
-        /*---------------------------------------------------------------------
-        |  Method manageMsg(keyboard, dbconn)
-        |
-        |  Purpose: manage conversations and messages, including starting new conversations, 
-                    adding messages to conversations, and updating message feedback
-        |
-        |  Pre-condition: User is connected to the database and selected UI option 2 to manage messages
-        |  Post-condition: User conversations and messages are managed successfully based on further input
-        |
-        |  Parameters:
-        |      Scanner keybaord - used to get user input for managing conversations and messages
-        |      Connection dbconn - used to execute SQL statements to manage conversations and messages in the database
-        |      
-        |  Returns: None.
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method manageMsg(keyboard, dbconn)
+    |
+    |  Purpose: manage conversations and messages, including starting new conversations, 
+                adding messages to conversations, and updating message feedback
+    |
+    |  Pre-condition: User is connected to the database and selected UI option 2 to manage messages
+    |  Post-condition: User conversations and messages are managed successfully based on further input
+    |
+    |  Parameters:
+    |      Scanner keybaord - used to get user input for managing conversations and messages
+    |      Connection dbconn - used to execute SQL statements to manage conversations and messages in the database
+    |      
+    |  Returns: None.
+    *-------------------------------------------------------------------*/
     private static void manageMsg(Scanner keyboard, Connection dbconn) {
         System.out.println(manageConvoInterface);
         String statement, query;
@@ -758,20 +760,20 @@ public class Interface {
         }
     }
 
-        /*---------------------------------------------------------------------
-        |  Method manageWorkspace(keyboard, dbconn)
-        |
-        |  Purpose: manage workspaces, including creating new workspaces and modifying existing workspaces
-        |
-        |  Pre-condition: User is connected to the database and selected UI option 3 to manage workspaces
-        |  Post-condition: User workspaces are managed successfully based on further input
-        |
-        |  Parameters:
-        |      Scanner keybaord - used to get user input for managing workspaces
-        |      Connection dbconn - used to execute SQL statements to manage user workspaces in the database
-        |      
-        |  Returns: None.
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method manageWorkspace(keyboard, dbconn)
+    |
+    |  Purpose: manage workspaces, including creating new workspaces and modifying existing workspaces
+    |
+    |  Pre-condition: User is connected to the database and selected UI option 3 to manage workspaces
+    |  Post-condition: User workspaces are managed successfully based on further input
+    |
+    |  Parameters:
+    |      Scanner keybaord - used to get user input for managing workspaces
+    |      Connection dbconn - used to execute SQL statements to manage user workspaces in the database
+    |      
+    |  Returns: None.
+    *-------------------------------------------------------------------*/
     private static void manageWorkspace(Scanner keyboard, Connection dbconn) {
         System.out.println(workspaceInterface);
         String statement, query;
@@ -835,25 +837,37 @@ public class Interface {
                         int choice = keyboard.nextInt();
                         keyboard.nextLine();
 
-                        if (choice == 1) {
+                        if (choice == 1) { // change privacy
                             String newPrivacy = promptUserForStr("Enter new privacy (public/private): ", keyboard);
                             statement = String.format(
                                 "UPDATE mngo1.Workspace SET privacy = '%s' WHERE wid = %d", 
                                 newPrivacy, wid);
+                            executeStmt(statement, dbconn);
                         } 
-                        else if (choice == 2) {
+                        else if (choice == 2) { // change owner
                             executeQuery(userQuery, dbconn, Entity.USER);
                        
                             int newOwner = promptUserForInt("Enter new owner userId: ", keyboard, dbconn, Entity.USER);
                             statement = String.format(
                                 "UPDATE mngo1.Workspace SET ownerId = %d WHERE wid = %d", 
                                 newOwner, wid);
-                        } 
+                            executeStmt(statement, dbconn);
+                        }
+                        else if (choice == 3) { // add a member
+                            executeQuery(userQuery, dbconn, Entity.USER);
+                            int newMember = promptUserForInt("Enter new member userId: ", keyboard, dbconn, Entity.USER);
+                            statement = String.format(
+                                "INSERT INTO mngo1.UserWorkspace VALUES (%d, %d)", newMember, wid
+                            );
+                            boolean success = executeStmt(statement, dbconn);
+                            if (!success) {
+                                System.err.println("User already a member");
+                                return;
+                            }
+                        }
                         else {
                             return;
                         }
-                        
-                        executeStmt(statement, dbconn);
                         System.out.println("Workspace modified successfully.");
                     }
                     exit = true;
@@ -869,8 +883,21 @@ public class Interface {
                         }
                     }
                     return;
-
-                case 3: // back to main menu
+                case 3: // check members in a workspace
+                    // Get all workspaces
+                    query = "SELECT * FROM mngo1.Workspace";
+                    count = executeQuery(query, dbconn, Entity.WORKSPACE);
+                    if (count == 0) {
+                        System.err.println("There are no workspaces to select.");
+                    }
+                    else {
+                        // Prompt user for which workspace to modify.
+                        int wid = promptUserForInt(selectWorkspacePrompt, keyboard, dbconn, Entity.WORKSPACE);
+                        statement = String.format("SELECT p.username FROM mngo1.Person p JOIN mngo1.UserWorkspace uw ON p.userId = uw.userId WHERE uw.wid = %d", wid);
+                        executeStmt(statement, dbconn);
+                    }
+                    return;
+                case 4: // back to main menu
                     return;
             
                 default:
@@ -879,20 +906,20 @@ public class Interface {
         }
     }
 
-        /*---------------------------------------------------------------------
-        |  Method managePersona (keyboard, dbconn)
-        |
-        |  Purpose: manage personas, including creating new personas and deleting existing personas
-        |
-        |  Pre-condition: User is connected to the database and selected UI option 4 to manage personas
-        |  Post-condition: User personas are managed successfully based on further input
-        |
-        |  Parameters:
-        |      Scanner keyboard - used to get user input for managing personas
-        |      Connection dbconn - used to execute SQL statements to manage user personas in the database
-        |      
-        |  Returns: None.
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method managePersona (keyboard, dbconn)
+    |
+    |  Purpose: manage personas, including creating new personas and deleting existing personas
+    |
+    |  Pre-condition: User is connected to the database and selected UI option 4 to manage personas
+    |  Post-condition: User personas are managed successfully based on further input
+    |
+    |  Parameters:
+    |      Scanner keyboard - used to get user input for managing personas
+    |      Connection dbconn - used to execute SQL statements to manage user personas in the database
+    |      
+    |  Returns: None.
+    *-------------------------------------------------------------------*/
     private static void managePersona(Scanner keyboard, Connection dbconn) {
         System.out.println(personaInterface);
         String statement, query;
@@ -1114,20 +1141,20 @@ public class Interface {
         }
     }
 
-        /*---------------------------------------------------------------------
-        |  Method manageSubs(keyboard, dbconn)
-        |
-        |  Purpose: manages subscriptions, including upgrading user subscription tiers and checking how close users are to their message limits
-        |
-        |  Pre-condition: User is connected to the database and selected UI option 6 to manage subscriptions
-        |  Post-condition: Subscriptions are managed successfully based on further input
-        |
-        |  Parameters:
-        |      Scanner keyboard - used to get user input for managing subscriptions
-        |      Connection dbconn - used to execute SQL statements to manage subscriptions in the database
-        |
-        |  Returns: None.
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method manageSubs(keyboard, dbconn)
+    |
+    |  Purpose: manages subscriptions, including upgrading user subscription tiers and checking how close users are to their message limits
+    |
+    |  Pre-condition: User is connected to the database and selected UI option 6 to manage subscriptions
+    |  Post-condition: Subscriptions are managed successfully based on further input
+    |
+    |  Parameters:
+    |      Scanner keyboard - used to get user input for managing subscriptions
+    |      Connection dbconn - used to execute SQL statements to manage subscriptions in the database
+    |
+    |  Returns: None.
+    *-------------------------------------------------------------------*/
     private static void manageSubs(Scanner keyboard, Connection dbconn) {
         System.out.println(subscriptionInterface);
         String query;
@@ -1333,20 +1360,20 @@ public class Interface {
         }
     }
 
-        /*---------------------------------------------------------------------
-        |  Method manageTickets(keyboard, dbconn)
-        |
-        |  Purpose: manages tickets, including creating support tickets, assigning tickets to agents, and marking tickets as resolved
-        |
-        |  Pre-condition: User is connected to the database and selected UI option 8 to manage tickets
-        |  Post-condition: Tickets are managed successfully based on further input
-        |
-        |  Parameters:
-        |      Scanner keyboard - used to get user input for managing tickets
-        |      Connection dbconn - used to execute SQL statements to manage tickets in the database
-        |
-        |  Returns: None.
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method manageTickets(keyboard, dbconn)
+    |
+    |  Purpose: manages tickets, including creating support tickets, assigning tickets to agents, and marking tickets as resolved
+    |
+    |  Pre-condition: User is connected to the database and selected UI option 8 to manage tickets
+    |  Post-condition: Tickets are managed successfully based on further input
+    |
+    |  Parameters:
+    |      Scanner keyboard - used to get user input for managing tickets
+    |      Connection dbconn - used to execute SQL statements to manage tickets in the database
+    |
+    |  Returns: None.
+    *-------------------------------------------------------------------*/
     private static void manageTickets(Scanner keyboard, Connection dbconn) {
         System.out.println(supportInterface);
         String statement, query;
@@ -1499,20 +1526,20 @@ public class Interface {
         }
     }
 
-        /*---------------------------------------------------------------------
-        |  Method chooseQuery(keyboard, dbconn)
-        |
-        |  Purpose: allows you to choose a query to answer based on the data in the DB.
-        |
-        |  Pre-condition: User is connected to the database and selected UI option 9 to choose a query
-        |  Post-condition: The query has executed successfully and the 
-        |
-        |  Parameters:
-        |      Scanner keyboard - used to get user input for selecting a query
-        |      Connection dbconn - used to execute SQL queries in the database
-        |
-        |  Returns: None.
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method chooseQuery(keyboard, dbconn)
+    |
+    |  Purpose: allows you to choose a query to answer based on the data in the DB.
+    |
+    |  Pre-condition: User is connected to the database and selected UI option 9 to choose a query
+    |  Post-condition: The query has executed successfully and the 
+    |
+    |  Parameters:
+    |      Scanner keyboard - used to get user input for selecting a query
+    |      Connection dbconn - used to execute SQL queries in the database
+    |
+    |  Returns: None.
+    *-------------------------------------------------------------------*/
     private static void chooseQuery(Scanner keyboard, Connection dbconn) {
         System.out.println(queryInterface);
         String query;
@@ -1695,20 +1722,20 @@ public class Interface {
         }
     }
 
-        /*---------------------------------------------------------------------
-        |  Method executeStmt(statement, dbconn)
-        |
-        |  Purpose: executues a SQL statement 
-        |
-        |  Pre-condition: User is connected to the database and a valid SQL statement is provided as input
-        |  Post-condition: SQL statement is executed successfully against the database
-        |
-        |  Parameters:
-        |      String statement - a valid SQL statement to execute against the database
-        |      Connection dbconn - used to execute the provided SQL statement against the database
-        |      
-        |  Returns: boolean - true if the statement executed successfully, false if there was an error executing the statement
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method executeStmt(statement, dbconn)
+    |
+    |  Purpose: executues a SQL statement 
+    |
+    |  Pre-condition: User is connected to the database and a valid SQL statement is provided as input
+    |  Post-condition: SQL statement is executed successfully against the database
+    |
+    |  Parameters:
+    |      String statement - a valid SQL statement to execute against the database
+    |      Connection dbconn - used to execute the provided SQL statement against the database
+    |      
+    |  Returns: boolean - true if the statement executed successfully, false if there was an error executing the statement
+    *-------------------------------------------------------------------*/
     private static boolean executeStmt(String statement, Connection dbconn) {
         try {
             Statement stmt = dbconn.createStatement();
@@ -1735,23 +1762,23 @@ public class Interface {
         }
     }
 
-        /*---------------------------------------------------------------------
-        |  Method executeQuery(query, dbconn, entity)
-        |
-        |  Purpose: Executes a SQL query and returns the number of rows returned
-        |           Additionally prints out some of the data from the returned rows depending on which entity is being queried
-        |
-        |  Pre-condition: User is connected to the database and a valid SQL query is provided as input, along with the matching type of entity being queried
-        |  Post-condition: The SQL query is executed successfully against the database, 
-        |                  the relevant data from the returned rows is printed, and the number of rows returned is provided as output
-        |
-        |  Parameters:
-        |      String query - the SQL query to execute
-        |      Connection dbconn - used to execute the provided SQL query against the database
-        |      Entity entity - the type of entity being queried
-        |
-        |  Returns: int - the number of rows returned by the query
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method executeQuery(query, dbconn, entity)
+    |
+    |  Purpose: Executes a SQL query and returns the number of rows returned
+    |           Additionally prints out some of the data from the returned rows depending on which entity is being queried
+    |
+    |  Pre-condition: User is connected to the database and a valid SQL query is provided as input, along with the matching type of entity being queried
+    |  Post-condition: The SQL query is executed successfully against the database, 
+    |                  the relevant data from the returned rows is printed, and the number of rows returned is provided as output
+    |
+    |  Parameters:
+    |      String query - the SQL query to execute
+    |      Connection dbconn - used to execute the provided SQL query against the database
+    |      Entity entity - the type of entity being queried
+    |
+    |  Returns: int - the number of rows returned by the query
+    *-------------------------------------------------------------------*/
     private static int executeQuery(String query, Connection dbconn, Entity entity) {
         int count = 0; // Counts the number of rows returned by the query
         try {
@@ -1860,20 +1887,20 @@ public class Interface {
         return count;
     }
 
-        /*---------------------------------------------------------------------
-        |  Method promptUserForStr(prompt, keyboard)
-        |
-        |  Purpose: prompts the user for a string input and validates the input 
-        |
-        |  Pre-condition: User needs to input a string in response to a prompt
-        |  Post-condition: A valid string input is returned based on the provided prompt and user input
-        |
-        |  Parameters:
-        |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
-        |      Scanner keyboard - the scanner object used to read user input
-        |
-        |  Returns: string - the user input to the scanner, between 1 and 255 characters in length
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method promptUserForStr(prompt, keyboard)
+    |
+    |  Purpose: prompts the user for a string input and validates the input 
+    |
+    |  Pre-condition: User needs to input a string in response to a prompt
+    |  Post-condition: A valid string input is returned based on the provided prompt and user input
+    |
+    |  Parameters:
+    |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
+    |      Scanner keyboard - the scanner object used to read user input
+    |
+    |  Returns: string - the user input to the scanner, between 1 and 255 characters in length
+    *-------------------------------------------------------------------*/
     private static String promptUserForStr(String prompt, Scanner keyboard) {
         String msg = prompt;
         String input = "";
@@ -1893,19 +1920,19 @@ public class Interface {
     }
 
     /*---------------------------------------------------------------------
-        |  Method promptUserForOptStr(prompt, keyboard)
-        |
-        |  Purpose: prompts the user for a string input and validates the input 
-        |
-        |  Pre-condition: User needs to input a string in response to a prompt
-        |  Post-condition: A valid string input is returned based on the provided prompt and user input
-        |
-        |  Parameters:
-        |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
-        |      Scanner keyboard - the scanner object used to read user input
-        |
-        |  Returns: string - the user input to the scanner, between 0 and 255 characters in length
-        *-------------------------------------------------------------------*/
+    |  Method promptUserForOptStr(prompt, keyboard)
+    |
+    |  Purpose: prompts the user for a string input and validates the input 
+    |
+    |  Pre-condition: User needs to input a string in response to a prompt
+    |  Post-condition: A valid string input is returned based on the provided prompt and user input
+    |
+    |  Parameters:
+    |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
+    |      Scanner keyboard - the scanner object used to read user input
+    |
+    |  Returns: string - the user input to the scanner, between 0 and 255 characters in length
+    *-------------------------------------------------------------------*/
     private static String promptUserForOptStr(String prompt, Scanner keyboard) {
         String msg = prompt;
         String input = "";
@@ -1924,22 +1951,22 @@ public class Interface {
         return input;
     }
 
-        /*---------------------------------------------------------------------
-        |  Method promptUserForInt(prompt, keyboard)
-        |
-        |  Purpose: Prompts the user for an integer input. Often used for selecting a pk of an entry.
-        |
-        |  Pre-condition: User needs to input a integer in response to a prompt
-        |  Post-condition: An integer is returned based on the provided prompt and user input
-        |
-        |  Parameters:
-        |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
-        |      Scanner keyboard - the scanner object used to read user input
-        |      Connection dbconn - the connection to the database used to verify the user's selection
-        |      Entity entity - the type of entity whose ID you are trying to select
-        |
-        |  Returns: the selected integer
-        *-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------
+    |  Method promptUserForInt(prompt, keyboard)
+    |
+    |  Purpose: Prompts the user for an integer input. Often used for selecting a pk of an entry.
+    |
+    |  Pre-condition: User needs to input a integer in response to a prompt
+    |  Post-condition: An integer is returned based on the provided prompt and user input
+    |
+    |  Parameters:
+    |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
+    |      Scanner keyboard - the scanner object used to read user input
+    |      Connection dbconn - the connection to the database used to verify the user's selection
+    |      Entity entity - the type of entity whose ID you are trying to select
+    |
+    |  Returns: the selected integer
+    *-------------------------------------------------------------------*/
     private static int promptUserForInt(String prompt, Scanner keyboard, Connection dbconn, Entity entity) {
         String msg = prompt;             // The message that prints when an error arises
         int input = -1;              // Init input

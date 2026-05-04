@@ -103,6 +103,7 @@ public class Setup {
         "\tINTO mngo1.Language VALUES (2, 'English')\n" +
         "\tINTO mngo1.Language VALUES (3, 'Spanish')\n" +
         "SELECT 1 FROM dual";
+
     /**
      * BillingRecord
      * Holds the Billing Data that is used to pay for Invoices.
@@ -112,6 +113,7 @@ public class Setup {
      * @field brid (PK)
      * @field payaddress
      * @field paymethod
+     * @field userId (FK)
      * 
      * -- Relationships --
      * @relationship BillingRecord -- 1 --> Person
@@ -474,7 +476,13 @@ public class Setup {
         "INSERT ALL\n" +
         "\tINTO mngo1.Conversation VALUES (1, 'therapy', 1, 1)\n" +
         "\tINTO mngo1.Conversation VALUES (2, 'fun games', 1, 3)\n" +
+        // a bunch of extra conversations to prevent a persona from being deleted
         "\tINTO mngo1.Conversation VALUES (3, 'Confusion', 3, 1)\n" +
+        "\tINTO mngo1.Conversation VALUES (4, 'Confusion', 3, 1)\n" +
+        "\tINTO mngo1.Conversation VALUES (5, 'Confusion', 3, 1)\n" +
+        "\tINTO mngo1.Conversation VALUES (6, 'Confusion', 3, 1)\n" +
+        "\tINTO mngo1.Conversation VALUES (7, 'Confusion', 3, 1)\n" +
+        "\tINTO mngo1.Conversation VALUES (8, 'Confusion', 3, 1)\n" +
         "SELECT 1 FROM dual";
 
     /**
