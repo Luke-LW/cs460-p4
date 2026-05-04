@@ -657,7 +657,7 @@ public class Setup {
         "INSERT ALL\n" +
         "\tINTO mngo1.UserPromptWorkspace VALUES (1, 1)\n" +
         "\tINTO mngo1.UserPromptWorkspace VALUES (1, 3)\n" +
-        "\tINTO mngo1.UserPromptWorkspace VALUES (3, 1)\n" +
+        "\tINTO mngo1.UserPromptWorkspace VALUES (3, 2)\n" +
         "SELECT 1 FROM dual";
     
     /**
@@ -765,6 +765,9 @@ public class Setup {
         "FOR EACH ROW " +
         // For each message being inserted, lookup which conversation it is and which user it is
         "DECLARE " +
+        "   v_messagesLeft NUMBER; " +
+        "BEGIN " +
+        // find out how many messages they have left
         "   SELECT p.messagesLeft " +
         "   INTO v_messagesLeft " +
         "   FROM mngo1.Conversation c " +
@@ -772,10 +775,10 @@ public class Setup {
         "       ON p.userId = c.userId" +
         "   WHERE c.cid = :NEW.cid;" +
         // block the insertion if user hits message limit
-        "IF v_messagesLeft < 1 THEN" +
+        "IF v_messagesLeft = 0 THEN" +
         "   RAISE_APPLICATION_ERROR(-20001, 'User has hit their message limit'); " +
         "END IF; " +
-        "END";;
+        "END;";
 
     /**
      * @trigger Deleting a user must fail if there are unpaid invoices or open support tickets.
@@ -900,6 +903,8 @@ public class Setup {
 
     
     public static final String[] DeleteTriggers = {
+        "DROP TRIGGER mngo1.prevent_message_insert",
+        "PURGE RECYCLEBIN",
         "DROP TRIGGER mngo1.prevent_user_delete",
         "PURGE RECYCLEBIN",
         "DROP TRIGGER mngo1.enforce_workspace_userprompt",
@@ -930,16 +935,16 @@ public class Setup {
     public static final String[] CreateTables = {
         AgentTable, LanguageTable, MembershipTable, PersonaTable, TemplatePromptTable,
         PersonTable, TicketTable, BillingRecordTable, InvoiceTable, ConversationTable, MessageTable,
-        BookmarkTable, WorkspaceTable, UserPromptTable, UserPromptWorkspaceTable,
+        BookmarkTable, WorkspaceTable, UserWorkspaceTable, UserPromptTable, UserPromptWorkspaceTable,
         ConversationWorkspaceTable, PromptCategoryTable, PromptCategoryUserPromptTable,
-        TemplatePromptWorkspaceTable, UserWorkspaceTable,
+        TemplatePromptWorkspaceTable,
     };
 
     public static final String[] CreateData = {
         AgentData, LanguageData, MembershipData, PersonaData, TemplatePromptData,
         PersonData, TicketData, BillingRecordData, InvoiceData, ConversationData, MessageData,
-        BookmarkData, WorkspaceData, UserPromptData, UserPromptWorkspaceData,
+        BookmarkData, WorkspaceData, UserWorkspaceData, UserPromptData, UserPromptWorkspaceData,
         ConversationWorkspaceData, PromptCategoryData, PromptCategoryUserPromptData,
-        TemplatePromptWorkspaceData, UserWorkspaceData
+        TemplatePromptWorkspaceData
     };
 }
