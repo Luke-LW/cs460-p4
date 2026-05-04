@@ -42,6 +42,7 @@ public class Setup {
      * @field username
      * @field pwd
      * @field email
+     * @field messagesLeft
      * @field lid (FK)
      * @field mtid (FK)
      * 
@@ -58,6 +59,7 @@ public class Setup {
         "username VARCHAR2(255) NOT NULL, " +
         "pwd VARCHAR2(255) NOT NULL, " +
         "email VARCHAR2(255) NOT NULL, " +
+        "messagesLeft NUMBER NOT NULL, " +
         // Foreign Key
         "lid NUMBER NOT NULL, " +
         "mtid NUMBER NOT NULL, " +
@@ -69,9 +71,9 @@ public class Setup {
         "DROP TABLE Person CASCADE CONSTRAINTS PURGE";
     public static final String PersonData =
         "INSERT ALL\n" +
-        "\tINTO mngo1.Person VALUES (1, 'Minh', 'abc', 'thatboy@arizona.edu', 1, 4)\n" +
-        "\tINTO mngo1.Person VALUES (2, 'Luke', 'abc', 'coolkid@arizona.edu', 2, 5)\n" +
-        "\tINTO mngo1.Person VALUES (3, 'Derek', 'abc', 'funguy@arizona.edu', 3, 6)\n" +
+        "\tINTO mngo1.Person VALUES (1, 'Minh', 'abc', 'thatboy@arizona.edu', 30, 1, 4)\n" +
+        "\tINTO mngo1.Person VALUES (2, 'Luke', 'abc', 'coolkid@arizona.edu', 29, 2, 5)\n" +
+        "\tINTO mngo1.Person VALUES (3, 'Derek', 'abc', 'funguy@arizona.edu', 28, 3, 6)\n" +
         "SELECT 1 FROM dual";
 
     /**
@@ -196,6 +198,7 @@ public class Setup {
      * 
      * -- Constraints --
      * @constraint hasPro must be (0, 1)
+     * @constraint tier mustbe (1, 2, 3)
      */
     public static final String MembershipTable =
         "CREATE TABLE mngo1.Membership (" + 
@@ -203,13 +206,14 @@ public class Setup {
         "hasPro NUMBER NOT NULL, " +
         "tier NUMBER NOT NULL, " +
         "messageLimit NUMBER NOT NULL, " +
+        "CONSTRAINT chk139 CHECK (tier IN (1, 2, 3)), " +
         "CONSTRAINT chk3 CHECK (hasPro IN (0, 1)))";
     public static final String MembershipDrop = 
         "DROP TABLE mngo1.Membership CASCADE CONSTRAINTS PURGE";
     public static final String MembershipData =
         "INSERT ALL\n" +
         "\tINTO mngo1.Membership VALUES (4, 0, 3, 100)\n" +
-        "\tINTO mngo1.Membership VALUES (5, 1, 5, 1000)\n" +
+        "\tINTO mngo1.Membership VALUES (5, 1, 2, 1000)\n" +
         "\tINTO mngo1.Membership VALUES (6, 0, 1, 5)\n" +
         "SELECT 1 FROM dual";
 
@@ -469,7 +473,7 @@ public class Setup {
     public static final String ConversationData =
         "INSERT ALL\n" +
         "\tINTO mngo1.Conversation VALUES (1, 'therapy', 1, 1)\n" +
-        "\tINTO mngo1.Conversation VALUES (2, 'fun games', 2, 3)\n" +
+        "\tINTO mngo1.Conversation VALUES (2, 'fun games', 1, 3)\n" +
         "\tINTO mngo1.Conversation VALUES (3, 'Confusion', 3, 1)\n" +
         "SELECT 1 FROM dual";
 
@@ -579,7 +583,7 @@ public class Setup {
         "bid NUMBER NOT NULL, " +
         // foreign key
         "mid NUMBER NOT NULL, " + 
-        "cid NUMBER NOT NUll, " + 
+        "cid NUMBER NOT NULL, " + 
         "userId NUMBER NOT NULL, " +
         // constraints
         "CONSTRAINT pk15 PRIMARY KEY (bid, mid, cid), " +
@@ -613,7 +617,7 @@ public class Setup {
     public static final String UserWorkspaceTable =
         "CREATE TABLE mngo1.UserWorkspace (" + 
         "userId NUMBER NOT NULL, " +
-        "wid NUMBER NOT NUll, " +
+        "wid NUMBER NOT NULL, " +
         "CONSTRAINT pk11 PRIMARY KEY (userId, wid), " +
         "CONSTRAINT fk14 FOREIGN KEY (userId) REFERENCES mngo1.Person(userId) ON DELETE CASCADE, " +
         "CONSTRAINT fk15 FOREIGN KEY (wid) REFERENCES mngo1.Workspace(wid) ON DELETE CASCADE)";
@@ -671,7 +675,7 @@ public class Setup {
     public static final String TemplatePromptWorkspaceTable =
         "CREATE TABLE mngo1.TemplatePromptWorkspace (" + 
         "tpid NUMBER NOT NULL, " +
-        "wid NUMBER NOT NUll, " +
+        "wid NUMBER NOT NULL, " +
         "CONSTRAINT pk12 PRIMARY KEY (tpid, wid), " +
         "CONSTRAINT fk18 FOREIGN KEY (tpid) REFERENCES mngo1.TemplatePrompt(tpid) ON DELETE CASCADE, " +
         "CONSTRAINT fk19 FOREIGN KEY (wid) REFERENCES mngo1.Workspace(wid) ON DELETE CASCADE)";
@@ -705,7 +709,7 @@ public class Setup {
     public static final String ConversationWorkspaceTable =
         "CREATE TABLE mngo1.ConversationWorkspace (" + 
         "cid NUMBER NOT NULL, " +
-        "wid NUMBER NOT NUll, " +
+        "wid NUMBER NOT NULL, " +
         "CONSTRAINT pk131 PRIMARY KEY (cid, wid), " +
         "CONSTRAINT fk201 FOREIGN KEY (cid) REFERENCES mngo1.Conversation(cid) ON DELETE CASCADE, " +
         "CONSTRAINT fk211 FOREIGN KEY (wid) REFERENCES mngo1.Workspace(wid) ON DELETE CASCADE)";
@@ -733,7 +737,7 @@ public class Setup {
     public static final String PromptCategoryUserPromptTable =
         "CREATE TABLE mngo1.PromptCategoryUserPrompt (" + 
         "pcid NUMBER NOT NULL, " +
-        "upid NUMBER NOT NUll, " + 
+        "upid NUMBER NOT NULL, " + 
         "CONSTRAINT pk14 PRIMARY KEY (pcid, upid), " +
         "CONSTRAINT fk22 FOREIGN KEY (pcid) REFERENCES mngo1.PromptCategory(pcid) ON DELETE CASCADE, " +
         "CONSTRAINT fk23 FOREIGN KEY (upid) REFERENCES mngo1.UserPrompt(upid) ON DELETE CASCADE)";
@@ -755,7 +759,7 @@ public class Setup {
      */
     public static final String UnpaidInvoiceTrigger = 
         // Trigger before delete on a user
-        "CREATE OR REPLACE TRIGGER prevent_user_delete " +
+        "CREATE OR REPLACE TRIGGER mngo1.prevent_user_delete " +
         "BEFORE DELETE ON mngo1.Person " +
         "FOR EACH ROW " +
         // For each user being deleted, declare variables to count unpaid invoices and open tickets
@@ -791,8 +795,8 @@ public class Setup {
      */
     public static final String unknownUserPromptInWorkspaceTrigger = 
         // Trigger before insert into UserPrompt
-        "CREATE OR REPLACE TRIGGER enforce_workspace_userprompt " +
-        "BEFORE INSERT ON mngo1.UserPrompt " +
+        "CREATE OR REPLACE TRIGGER mngo1.enforce_workspace_userprompt " +
+        "BEFORE INSERT ON mngo1.UserPromptWorkspace " +
         "FOR EACH ROW " +
         // For each UserPrompt being added, declare a variable to count the number of workspace
         "DECLARE " +
@@ -802,7 +806,7 @@ public class Setup {
             // Check that the user adding the UserPrompt is a member of the workspace
             // they are trying to add to (member_count should be 1 if they are a member, 0 if not)
         "   SELECT COUNT(*) INTO member_count " +
-        "   FROM mngo1.Workspace " +
+        "   FROM mngo1.UserWorkspace " +
         "   WHERE userId = :NEW.userId " +
         "   AND wid = (SELECT wid FROM mngo1.UserPrompt WHERE upid = :NEW.upid); " +
         // If the member count is 0, it means the user is not a member of the workspace, so raise an error to prevent insertion
@@ -819,7 +823,7 @@ public class Setup {
      */
     public static final String unknownConversationInWorkspaceTrigger = 
         // Trigger before insert into Conversation
-        "CREATE OR REPLACE TRIGGER enforce_workspace_conversation " +
+        "CREATE OR REPLACE TRIGGER mngo1.enforce_workspace_conversation " +
         "BEFORE INSERT ON mngo1.Conversation " +
         "FOR EACH ROW " +
         // For each Conversation being added, declare a variable to count the number of workspace
@@ -839,7 +843,6 @@ public class Setup {
         "       'User is not a member of the specified workspace.'); " +
         "   END IF; " +
         "END;";
-
     
     /**
      * @trigger when a persona is 'ATTEMPTING' to be deleted, check that no more
@@ -848,7 +851,7 @@ public class Setup {
      */
     public static final String deletePersonaTrigger = 
         // Trigger on personal deletion
-        "CREATE OR REPLACE TRIGGER prevent_persona_delete " +
+        "CREATE OR REPLACE TRIGGER mngo1.prevent_persona_delete " +
         "BEFORE DELETE ON mngo1.Persona " +
         "FOR EACH ROW " +
         // For each persona being deleted, declare a variable to count the number of conversations using that persona
@@ -873,6 +876,23 @@ public class Setup {
         "END;";
 
     
+    public static final String[] DeleteTriggers = {
+        "DROP TRIGGER mngo1.prevent_user_delete",
+        "PURGE RECYCLEBIN",
+        "DROP TRIGGER mngo1.enforce_workspace_userprompt",
+        "PURGE RECYCLEBIN",
+        "DROP TRIGGER mngo1.enforce_workspace_conversation",
+        "PURGE RECYCLEBIN",
+        "DROP TRIGGER mngo1.prevent_persona_delete",
+        "PURGE RECYCLEBIN",
+    };
+
+    public static final String[] CreateTriggers = {
+        UnpaidInvoiceTrigger,
+        unknownUserPromptInWorkspaceTrigger,
+        unknownConversationInWorkspaceTrigger,
+        deletePersonaTrigger
+    };
 
 
     public static final String[] DropTables = {
@@ -889,8 +909,6 @@ public class Setup {
         BookmarkTable, WorkspaceTable, UserPromptTable, UserPromptWorkspaceTable,
         ConversationWorkspaceTable, PromptCategoryTable, PromptCategoryUserPromptTable,
         TemplatePromptWorkspaceTable, UserWorkspaceTable,
-
-        UnpaidInvoiceTrigger, unknownUserPromptInWorkspaceTrigger, unknownConversationInWorkspaceTrigger, deletePersonaTrigger
     };
 
     public static final String[] CreateData = {

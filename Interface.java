@@ -179,7 +179,9 @@ public class Interface {
     private final static String selectAgentPrompt =
         "Select an agent to assign to the ticket: ";
     private final static String selectTicketForResolvePrompt =
-        "Select a ticket to resolve: ";
+        "Select a ticket to change status: ";
+    private final static String selectTicketStatus =
+        "Select a status (0: Waiting, 1: Escalated, 2: Resolved): ";
 
     private final static String queryInterface =
         "\f----------------------------\n" +
@@ -338,7 +340,7 @@ public class Interface {
                     String idQuery = "SELECT MAX(userId) FROM mngo1.Person";
                     int newId = getNextId(idQuery, dbconn);
                     // format and execute the SQL statement to add a user account with the provided information
-                    statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', %d, 4)", newId, username, password, email, lid);
+                    statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', 50, %d, 1)", newId, username, password, email, lid);
                     executeStmt(statement, dbconn);
                     System.out.println("User account created successfully.");
                     return;
@@ -761,12 +763,8 @@ public class Interface {
                             // Prompt user for which user to upgrade
                             int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard);
                             int newTier = promptUserForInt("Enter new tier (1-3): ", keyboard);
-                            
                             String statement = String.format(
-                                "UPDATE mngo1.Membership SET tier = %d, hasPro = 1 " +
-                                "WHERE mtid = (SELECT mtid FROM mngo1.Person p " +
-                                "JOIN mngo1.Membership m ON p.userId = ? WHERE p.userId = %d)", // Simplified
-                                newTier, userId);  // Note: You may need to adjust based on actual FKs
+                                "UPDATE mngo1.Person SET mtid = %d, messagesLeft = (SELECT messageLimit FROM mngo1.Membership WHERE mtid = %d) WHERE userId = %d", newTier, newTier, userId);
                             
                             executeStmt(statement, dbconn);
                             System.out.println("Subscription upgraded.");
@@ -785,6 +783,10 @@ public class Interface {
                         else {
                             // Prompt user for which user to check message limit for
                             int userId = promptUserForInt(selectUserForLimitCheck, keyboard);
+                            String statement = String.format(
+                                "SELECT messagesLeft FROM mngo1.Person WHERE userId = %d", userId
+                            );
+                            executeStmt(statement, dbconn);
                         }
                         return;
                     }
@@ -956,6 +958,7 @@ public class Interface {
                         else {
                             // Prompt user for which ticket to mark as resolved
                             int tid = promptUserForInt(selectTicketForResolvePrompt, keyboard);
+                            int status = promptUserForInt(selectTicketStatus, keyboard);
                             statement = "UPDATE mngo1.Ticket SET outcome = 'Resolved', duration = 30 WHERE tid = " + tid;
                             executeStmt(statement, dbconn);
                             System.out.println("Ticket marked as resolved.");
