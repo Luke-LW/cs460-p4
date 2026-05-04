@@ -1080,6 +1080,7 @@ public class Interface {
     private static void chooseQuery(Scanner keyboard, Connection dbconn) {
         System.out.println(queryInterface);
         String query;
+        boolean exit;
         int count;
         int input = 0;
 
@@ -1114,7 +1115,7 @@ public class Interface {
                     }
                     else {
                         // Prompt user for which user to execute query on
-                        int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard, dbconn, Entity.USER);
+                        int userId = promptUserForInt("\nSelect user to find bookmarks for: ", keyboard, dbconn, Entity.USER);
                         // Now execute query 1 on the selected user
                         query = """
                                 SELECT p.userId, p.username, c.title, m.message, m.timestamp
@@ -1125,7 +1126,20 @@ public class Interface {
                                 WHERE b.userId = """ + userId + """
                                 ORDER BY m.timestamp DESC
                                 """;
+                        System.out.println("\nBookmarks for userId " + userId + ":");
                         count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_1);
+                    }
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
                     }
                     return;
                 
@@ -1144,7 +1158,20 @@ public class Interface {
                             HAVING SUM(i.amount) > 0
                             ORDER BY total_amount_owed DESC
                             """;
+                    System.out.println("\nUsers with unpaid invoices:");
                     count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_2);
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
 
                 case 3: // Query 3
@@ -1169,7 +1196,20 @@ public class Interface {
                             )
                             WHERE ROWNUM = 1
                             """;
+                    System.out.println("\n");
                     count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_3);
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
 
                 case 4: // Query 4
@@ -1192,7 +1232,20 @@ public class Interface {
                             )
                             WHERE ROWNUM <= 5
                             """;
+                    System.out.println("\nTop 5 users with most messages sent:");
                     count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_4);
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        input = keyboard.nextInt();
+                        keyboard.nextLine();
+                        if (input == 1) {
+                            exit = false;
+                        }
+                        else {
+                            System.err.println("Please enter 1 to return to the main menu.");
+                        }
+                    }
                     return;
 
                 case 5: // Back to main menu
