@@ -14,6 +14,9 @@
  *                  in Interface.java's main method to connect to the database via JDBC driver.
  *                  
  *   Requirements:  Java 25 or earlier
+ *                  Oracle JDBC driver is in your classpath (on Lectura)
+ *                     -> "export CLASSPATH=/usr/lib/oracle/19.8/client64/lib/ojdbc8.jar:${CLASSPATH}"
+ *                  Oracle Login
  *        Compile:  javac OracleUser.java
  *         Usage:   java OracleUser 
  *    Input Files:  None. 

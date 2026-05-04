@@ -14,6 +14,10 @@
  *                  
  * 
  *   Requirements:  Java 25 or earlier
+ *                  Oracle JDBC driver is in your classpath (on Lectura)
+ *                     -> "export CLASSPATH=/usr/lib/oracle/19.8/client64/lib/ojdbc8.jar:${CLASSPATH}"
+ *                  Oracle Login
+ *                  Setup.java, OracleUser.java compiled and in the same directory
  *        Compile:  javac Database.java
  *         Usage:   java Database 
  *    Input Files:  None. 
