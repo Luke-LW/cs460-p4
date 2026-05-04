@@ -913,7 +913,7 @@ public class Setup {
 
     public static final String[] CreateData = {
         AgentData, LanguageData, MembershipData, PersonaData, TemplatePromptData,
-        PersonData, TicketData, BillingRecordData, InvoiceData, ConversationData, MembershipData,
+        PersonData, TicketData, BillingRecordData, InvoiceData, ConversationData, MessageData,
         BookmarkData, WorkspaceData, UserPromptData, UserPromptWorkspaceData,
         ConversationWorkspaceData, PromptCategoryData, PromptCategoryUserPromptData,
         TemplatePromptWorkspaceData, UserWorkspaceData
