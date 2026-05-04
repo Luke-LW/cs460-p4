@@ -40,7 +40,7 @@ import java.util.Scanner;
 public class Interface {
     private enum Entity {
         USER, MESSAGE, CONVERSATION, WORKSPACE, PERSONA, USER_PROMPT, INVOICE, SUPPORT_TICKET, AGENT,
-        SPECIAL_QUERY_1, SPECIAL_QUERY_2, SPECIAL_QUERY_3, SPECIAL_QUERY_4
+        SPECIAL_QUERY_1, SPECIAL_QUERY_2, SPECIAL_QUERY_3, SPECIAL_QUERY_4, SUBSCRIPTION_TIER, RATING_VALUE
     };
 
     private final static String mainInterface =
@@ -92,8 +92,8 @@ public class Interface {
         "Enter a title for the conversation: ";
     private final static String selectConvoForUpdatePrompt =
         "Select a conversation to add messages to: ";
-    private final static String selectMessageForConvoPrompt =
-        "Select one of the following messages to add to the conversation: ";
+    private final static String selectConvoToFindMessagePrompt =
+        "Select a conversation to search the methods within: ";
     private final static String selectMessageForFeedbackPrompt =
         "Select one of the following messages to adjust its feedback: ";
 
@@ -352,7 +352,7 @@ public class Interface {
                         System.err.println("There are no users to select.");
                     else {
                         // If user exists to update, call helper method to prompt user for specific user 
-                        int userId = promptUserForInt(selectUserForUpdatePrompt, keyboard);
+                        int userId = promptUserForInt(selectUserForUpdatePrompt, keyboard, dbconn, Entity.USER);
                         
                             // At this point we have found the user the user wants to update,
                             // so we can prompt them for the new information for that user
@@ -373,7 +373,7 @@ public class Interface {
                         System.err.println("There are no users to select.");
                     else {
                         // If the user exists , call helper method to prompt user for specific user to delete
-                        int userId = promptUserForInt(selectUserForDeletePrompt, keyboard);
+                        int userId = promptUserForInt(selectUserForDeletePrompt, keyboard, dbconn, Entity.USER);
                         statement = String.format("DELETE FROM mngo1.Person WHERE userId = %d", userId);
                         executeStmt(statement, dbconn);
                         System.out.println("User account deleted successfully.");
@@ -444,7 +444,7 @@ public class Interface {
                             // At this point we have found the conversation the user wants
                             // So we perform a similar operation to add a message to the conversation
 
-                            int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard);
+                            int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard, dbconn, Entity.CONVERSATION);
 
                             String msg = promptUserForStr("Enter message: ", keyboard);
                             String sender = promptUserForStr("Enter sender (user/ai): ", keyboard);
@@ -469,7 +469,7 @@ public class Interface {
                             System.err.println("There are no conversations to select.");
                             return;
                         }
-                        int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard);
+                        int cid = promptUserForInt(selectConvoToFindMessagePrompt, keyboard, dbconn, Entity.CONVERSATION);
                         
                         // Get all messages to find which message to update feedback for
                         query = "SELECT * FROM mngo1.Message WHERE cid = " + cid;
@@ -478,8 +478,8 @@ public class Interface {
                             System.err.println("There are no messages to select.");
                         }
                         else {
-                            int mid = promptUserForInt(selectMessageForFeedbackPrompt, keyboard);
-                            int rating = promptUserForInt("Enter Rating (Thumbs Up = 1/Down = -1): ", keyboard);
+                            int mid = promptUserForInt(selectMessageForFeedbackPrompt, keyboard, dbconn, Entity.MESSAGE);
+                            int rating = promptUserForInt("Enter Rating (Thumbs Up = 1/Down = -1): ", keyboard, dbconn, Entity.RATING_VALUE);
                             String ratingText = promptUserForStr("Feedback Text: ", keyboard);
                             statement = String.format(
                                 "UPDATE mngo1.Message SET rating = %d, ratingText = '%s' " +
@@ -548,7 +548,7 @@ public class Interface {
                     }
                     else {
                         // Prompt user for which workspace to modify.
-                        int wid = promptUserForInt(selectWorkspacePrompt, keyboard);
+                        int wid = promptUserForInt(selectWorkspacePrompt, keyboard, dbconn, Entity.WORKSPACE);
                         System.out.println(modifyWorkspaceInterface);
                         int choice = keyboard.nextInt();
                         keyboard.nextLine();
@@ -560,7 +560,7 @@ public class Interface {
                                 newPrivacy, wid);
                         } 
                         else if (choice == 2) {
-                            int newOwner = promptUserForInt("Enter new owner userId: ", keyboard);
+                            int newOwner = promptUserForInt("Enter new owner userId: ", keyboard, dbconn, Entity.USER);
                             statement = String.format(
                                 "UPDATE mngo1.Workspace SET ownerId = %d WHERE wid = %d", 
                                 newOwner, wid);
@@ -640,7 +640,7 @@ public class Interface {
                         }
                         else {
                             // Prompt user for which persona to delete
-                            int pid = promptUserForInt(selectPersonaToDeletePrompt, keyboard);
+                            int pid = promptUserForInt(selectPersonaToDeletePrompt, keyboard, dbconn, Entity.PERSONA);
                             statement = "DELETE FROM mngo1.Persona WHERE pid = " + pid;
                             executeStmt(statement, dbconn);
                             System.out.println("Persona deleted successfully.");
@@ -707,7 +707,7 @@ public class Interface {
                     }
                     else {
                         // Prompt user for which prompt template to update
-                        int upid = promptUserForInt(selectPromptPrompt, keyboard);
+                        int upid = promptUserForInt(selectPromptPrompt, keyboard, dbconn, Entity.USER_PROMPT);
                     }
                     return;
 
@@ -759,8 +759,8 @@ public class Interface {
                         }
                         else {
                             // Prompt user for which user to upgrade
-                            int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard);
-                            int newTier = promptUserForInt("Enter new tier (1-3): ", keyboard);
+                            int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard, dbconn, Entity.USER);
+                            int newTier = promptUserForInt("Enter new tier (1-3): ", keyboard, dbconn, Entity.SUBSCRIPTION_TIER);
                             
                             String statement = String.format(
                                 "UPDATE mngo1.Membership SET tier = %d, hasPro = 1 " +
@@ -784,7 +784,7 @@ public class Interface {
                         }
                         else {
                             // Prompt user for which user to check message limit for
-                            int userId = promptUserForInt(selectUserForLimitCheck, keyboard);
+                            int userId = promptUserForInt(selectUserForLimitCheck, keyboard, dbconn, Entity.USER);
                         }
                         return;
                     }
@@ -827,7 +827,7 @@ public class Interface {
                     // with a SQL statement that is executed to manage billing
 
                 case 1: // Generate invoice
-                    int userIdForInvoice = promptUserForInt("Enter userId to generate invoice for: ", keyboard);
+                    int userIdForInvoice = promptUserForInt("Enter userId to generate invoice for: ", keyboard, dbconn, Entity.USER);
                     // Simple invoice generation
                     String invQuery = "SELECT NVL(MAX(invid), 0) + 1 FROM mngo1.Invoice";
                     int newInvId = getNextId(invQuery, dbconn);
@@ -851,7 +851,7 @@ public class Interface {
                         return;
                     }
                     
-                    int invId = promptUserForInt(selectInvoiceToPayPrompt, keyboard);
+                    int invId = promptUserForInt(selectInvoiceToPayPrompt, keyboard, dbconn, Entity.INVOICE);
                     statement = "UPDATE mngo1.Invoice SET status = 'paid' WHERE invid = " + invId;
                     executeStmt(statement, dbconn);
                     System.out.println("Invoice marked as paid.");
@@ -899,7 +899,7 @@ public class Interface {
                     {
                         // Prompt user for topic of support ticket, then format and execute SQL statement to create a new support ticket with that topic
                         String topic = promptUserForStr(addTicketTopicPrompt, keyboard);
-                        int userId = promptUserForInt("Enter userId creating the ticket: ", keyboard);
+                        int userId = promptUserForInt("Enter userId creating the ticket: ", keyboard, dbconn, Entity.USER);
                         
                         String tidQuery = "SELECT NVL(MAX(tid), 0) + 1 FROM mngo1.Ticket";
                         int newTid = getNextId(tidQuery, dbconn);
@@ -923,7 +923,7 @@ public class Interface {
                             System.err.println("There are no tickets to select.");
                             return;
                         }
-                        int tid = promptUserForInt(selectTicketForAgentPrompt, keyboard);
+                        int tid = promptUserForInt(selectTicketForAgentPrompt, keyboard, dbconn, Entity.SUPPORT_TICKET);
 
                         // At this point we have selected the ticket we want to assign
                         // So we perform a similar operation to assign an agent to the ticket
@@ -937,7 +937,7 @@ public class Interface {
                         else {
                             // Prompt user for which agent to assign the ticket to
                             
-                            int aid = promptUserForInt(selectAgentPrompt, keyboard);
+                            int aid = promptUserForInt(selectAgentPrompt, keyboard, dbconn, Entity.AGENT);
                             statement = "UPDATE mngo1.Ticket SET aid = " + aid + " WHERE tid = " + tid;
                             executeStmt(statement, dbconn);
                             System.out.println("Ticket assigned to agent.");
@@ -955,7 +955,7 @@ public class Interface {
                         }
                         else {
                             // Prompt user for which ticket to mark as resolved
-                            int tid = promptUserForInt(selectTicketForResolvePrompt, keyboard);
+                            int tid = promptUserForInt(selectTicketForResolvePrompt, keyboard, dbconn, Entity.SUPPORT_TICKET);
                             statement = "UPDATE mngo1.Ticket SET outcome = 'Resolved', duration = 30 WHERE tid = " + tid;
                             executeStmt(statement, dbconn);
                             System.out.println("Ticket marked as resolved.");
@@ -1015,7 +1015,7 @@ public class Interface {
                     }
                     else {
                         // Prompt user for which user to execute query on
-                        int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard);
+                        int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard, dbconn, Entity.USER);
                         // Now execute query 1 on the selected user
                         query = "SELECT b.userId, u.username, c.title, m.message, m.timestamp " +
                                 "FROM mngo1.Bookmark b " +
@@ -1282,28 +1282,133 @@ public class Interface {
         |  Parameters:
         |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
         |      Scanner keyboard - the scanner object used to read user input
+        |      Connection dbconn - the connection to the database used to verify the user's selection
+        |      Entity entity - the type of entity whose ID you are trying to select
         |
-        |  Returns: 
+        |  Returns: the selected integer
         *-------------------------------------------------------------------*/
-    private static int promptUserForInt(String prompt, Scanner keyboard) {
+    private static int promptUserForInt(String prompt, Scanner keyboard, Connection dbconn, Entity entity) {
         boolean syntaxError = false; // To validate user input
+        String errorMsg = "";        // The message that prints when an error arises
         System.out.print(prompt);    // Print the provided prompt to the user
         int input = -1;              // Init input to check for type mismatch on the input
+        String tableId = "";
+        String pk = "";
         try {
             input = keyboard.nextInt();
             keyboard.nextLine();
         } catch (InputMismatchException e) {
             // If the user input is a mismatch (not an integer), we mark it as a syntax error to prompt the user again
             syntaxError = true;
+            errorMsg = "Error: Please input an integer: ";
         }
+        // Keep sub tiers as between 1 and 3
+        if (entity == Entity.SUBSCRIPTION_TIER && input < 1 && input > 3) {
+          syntaxError = true;
+          errorMsg = "Error: Value must be between 1-3: ";
+        }
+        // Keep ratings as either 1 or -1
+        else if (entity == Entity.RATING_VALUE && input != 1 && input != -1) {
+          syntaxError = true;
+          errorMsg = "Error: Value must be -1 or 1: ";
+        }
+        // Verify that the selected id exists
+        else {
+          switch (entity) {
+            case USER:
+                tableId = "mngo1.Person";
+                pk = "userId";
+                break;
+
+            case CONVERSATION:
+                tableId = "mngo1.Conversation";
+                pk = "cid";
+                break;
+
+            case WORKSPACE:
+                tableId = "mngo1.Workspace";
+                pk = "wid";
+                break;
+            
+            case USER_PROMPT:
+                tableId = "mngo1.UserPrompt";
+                pk = "upid";
+                break;
+
+            case PERSONA:
+                tableId = "mngo1.Persona";
+                pk = "pid";
+                break;
+
+            case INVOICE:
+                tableId = "mngo1.Invoice";
+                pk = "invid";
+                break;
+
+            case MESSAGE:
+                tableId = "mngo1.Message";
+                pk = "mid";
+                break;
+
+            case AGENT:
+                tableId = "mngo1.Agent";
+                pk = "aid";
+                break;
+
+            case SUPPORT_TICKET:
+                tableId = "mngo1.Ticket";
+                pk = "tid";
+                break;
+          }
+
+          // Query the db to see if id is present
+          try {
+              String query = String.format("SELECT * FROM %s WHERE %s = %d",
+                  tableId, pk, input
+              );
+              Statement stmt = dbconn.createStatement();
+              ResultSet rs = stmt.executeQuery(query);
+
+              if (!rs.next()) { // There was no result
+                syntaxError = true;
+                errorMsg = "Error: The selected number does not correspond to an entry. Try again: ";
+              }
+          } catch (SQLException e) {
+            System.err.println(e);
+          }
+        }
+
+
         // Repeatedly prompt user until they provide a valid integer input 
         while (syntaxError) {
-            System.err.print("Error: Please input an integer: ");
+            System.err.print(errorMsg);
             try {
                 input = keyboard.nextInt();
                 keyboard.nextLine();
                 syntaxError = false;
-            } catch (InputMismatchException e) {}
+            } catch (InputMismatchException e) {
+              errorMsg = "Error: Please input an integer: ";
+            }
+            if (entity == Entity.SUBSCRIPTION_TIER && input < 1 && input > 3)
+              errorMsg = "Error: Value must be between 1-3: ";
+            else if (entity == Entity.RATING_VALUE && input != 1 && input != -1)
+              errorMsg = "Error: Value must be -1 or 1: ";
+            else {
+                try {
+                    String query = String.format("SELECT * FROM %s WHERE %s = %d",
+                        tableId, pk, input
+                    );
+                    Statement stmt = dbconn.createStatement();
+                    ResultSet rs = stmt.executeQuery(query);
+      
+                    if (!rs.next()) { // There was no result
+                        syntaxError = true;
+                        errorMsg = "Error: The selected number does not correspond to an entry. Try again: ";
+                    }
+              } catch (SQLException e) {
+                  System.err.println(e);
+              }
+            }
         }
         // Once we have valid input, we return that input integer
         return input;
