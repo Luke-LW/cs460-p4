@@ -105,6 +105,7 @@ public class Interface {
         "1: Create workspace\n" +
         "2: Modify workspace\n" +
         "3: View workspace members\n" +
+        "4: Add conversation to workspace\n" +
         "4: Back\n" +
         "------------------------\n";
     private final static String addWorkspacePrivacyPrompt =
@@ -883,20 +884,102 @@ public class Interface {
                         }
                     }
                     return;
-                case 3: // check members in a workspace
-                    // Get all workspaces
-                    query = "SELECT * FROM mngo1.Workspace";
-                    count = executeQuery(query, dbconn, Entity.WORKSPACE);
-                    if (count == 0) {
-                        System.err.println("There are no workspaces to select.");
+
+                case 3: // Add conversation to workspace
+                    {
+                        // Show all workspaces
+                        String wsQuery = "SELECT * FROM mngo1.Workspace";
+                        executeQuery(wsQuery, dbconn, Entity.WORKSPACE);
+
+                        int wid = promptUserForInt("Select workspace to add conversation to: ", 
+                                                 keyboard, dbconn, Entity.WORKSPACE);
+
+                        // Show all conversations
+                        String convoQuery = """
+                            SELECT c.cid, c.title, c.userId, c.pid, p.username 
+                            FROM mngo1.Conversation c 
+                            JOIN mngo1.Person p ON c.userId = p.userId 
+                            ORDER BY c.cid
+                            """;
+                        executeQuery(convoQuery, dbconn, Entity.CONVERSATION);
+
+                        int cid = promptUserForInt("Select conversation to add: ", 
+                                                 keyboard, dbconn, Entity.CONVERSATION);
+
+                        try {
+                            Statement stmt = dbconn.createStatement();
+
+                            // Get owner of the conversation
+                            ResultSet rs = stmt.executeQuery(
+                                "SELECT userId FROM mngo1.Conversation WHERE cid = " + cid);
+                            if (!rs.next()) {
+                                System.err.println("Conversation not found.");
+                                break;
+                            }
+                            int convoOwnerId = rs.getInt("userId");
+
+                            // Get owner of the workspace
+                            rs = stmt.executeQuery(
+                                "SELECT ownerId FROM mngo1.Workspace WHERE wid = " + wid);
+                            if (!rs.next()) {
+                                System.err.println("Workspace not found.");
+                                break;
+                            }
+                            int workspaceOwnerId = rs.getInt("ownerId");
+
+                            // Check if user is member of workspace OR is the owner
+                            String memberCheck = """
+                                SELECT COUNT(*) FROM mngo1.UserWorkspace 
+                                WHERE wid = """ + wid + " AND userId = " + convoOwnerId;
+
+                            rs = stmt.executeQuery(memberCheck);
+                            rs.next();
+                            int isMember = rs.getInt(1);
+
+                            boolean canAdd = (isMember > 0) || (convoOwnerId == workspaceOwnerId);
+
+                            if (!canAdd) {
+                                System.err.println("Cannot add conversation.");
+                                System.err.println("User " + convoOwnerId + " is not a member of workspace " + wid + 
+                                                 " and is not the owner.");
+                                break;
+                            }
+
+                            // Add to junction table
+                            String insertStmt = String.format(
+                                "INSERT INTO mngo1.ConversationWorkspace (cid, wid) VALUES (%d, %d)", 
+                                cid, wid);
+
+                            executeStmt(insertStmt, dbconn);
+                            System.out.println("Conversation " + cid + " added to workspace " + wid);
+
+                        } catch (SQLException e) {
+                            if (e.getMessage().toLowerCase().contains("unique") || 
+                                e.getMessage().toLowerCase().contains("primary key")) {
+                                System.err.println("This conversation is already in that workspace.");
+                            } else {
+                                System.err.println("Database error: " + e.getMessage());
+                            }
+                        }
                     }
-                    else {
-                        // Prompt user for which workspace to modify.
-                        int wid = promptUserForInt(selectWorkspacePrompt, keyboard, dbconn, Entity.WORKSPACE);
-                        statement = String.format("SELECT p.username FROM mngo1.Person p JOIN mngo1.UserWorkspace uw ON p.userId = uw.userId WHERE uw.wid = %d", wid);
-                        executeStmt(statement, dbconn);
+                    exit = true;
+                    System.out.println("\nEnter 1 to return to main menu");
+                    while (exit){
+                        try {
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            } else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
+                        } catch (InputMismatchException e) {
+                            keyboard.nextLine();
+                            System.err.println("Please enter 1.");
+                        }
                     }
                     return;
+
                 case 4: // back to main menu
                     return;
             
@@ -975,30 +1058,57 @@ public class Interface {
 
                 case 2: // delete persona
                     {
-                        // Get all personas to find which persona to delete
+                        // Show all current personas
                         query = "SELECT * FROM mngo1.Persona";
                         count = executeQuery(query, dbconn, Entity.PERSONA);
                         if (count == 0) {
                             System.err.println("There are no personas to select.");
                         }
                         else {
-                            // Prompt user for which persona to delete
                             int pid = promptUserForInt(selectPersonaToDeletePrompt, keyboard, dbconn, Entity.PERSONA);
-                            statement = "DELETE FROM mngo1.Persona WHERE pid = " + pid;
-                            executeStmt(statement, dbconn);
-                            System.out.println("Persona deleted successfully.");
+
+                            // Check how many conversations are using this persona
+                            String checkQuery = 
+                                "SELECT COUNT(*) AS convo_count " +
+                                "FROM mngo1.Conversation " +
+                                "WHERE pid = " + pid;
+
+                            try {
+                                Statement stmt = dbconn.createStatement();
+                                ResultSet rs = stmt.executeQuery(checkQuery);
+                                rs.next();
+                                int convoCount = rs.getInt("convo_count");
+
+                                if (convoCount > 5) {
+                                    System.err.println("Cannot delete persona: It is used in " + convoCount + 
+                                                     " conversations (more than 5 allowed).");
+                                } 
+                                else {
+                                    statement = "DELETE FROM mngo1.Persona WHERE pid = " + pid;
+                                    executeStmt(statement, dbconn);
+                                    System.out.println("Persona deleted successfully.");
+                                }
+                            } catch (SQLException e) {
+                                System.err.println("Error checking persona usage: " + e.getMessage());
+                            }
                         }
                     }
+                    
                     exit = true;
                     System.out.println("\nEnter 1 to return to main menu");
                     while (exit){
-                        input = keyboard.nextInt();
-                        keyboard.nextLine();
-                        if (input == 1) {
-                            exit = false;
-                        }
-                        else {
-                            System.err.println("Please enter 1 to return to the main menu.");
+                        try {
+                            input = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (input == 1) {
+                                exit = false;
+                            }
+                            else {
+                                System.err.println("Please enter 1 to return to the main menu.");
+                            }
+                        } catch (InputMismatchException e) {
+                            keyboard.nextLine();
+                            System.err.println("Please enter 1.");
                         }
                     }
                     return;
@@ -1401,6 +1511,9 @@ public class Interface {
                     {
                         // Prompt user for topic of support ticket, then format and execute SQL statement to create a new support ticket with that topic
                         String topic = promptUserForStr(addTicketTopicPrompt, keyboard);
+                        query = "SELECT * FROM mngo1.Person";
+                        count = executeQuery(query, dbconn, Entity.USER);
+
                         int userId = promptUserForInt("Enter userId creating the ticket: ", keyboard, dbconn, Entity.USER);
                         
                         String tidQuery = "SELECT NVL(MAX(tid), 0) + 1 FROM mngo1.Ticket";
@@ -1807,7 +1920,7 @@ public class Interface {
                         break;
 
                     case WORKSPACE:
-                        System.out.printf("%d: (privacy: %s, ownerId: %d)\n",
+                        System.out.printf("%d: (privacy: %s, userId: %d)\n",
                             rs.getInt("wid"), rs.getString("privacy"), rs.getInt("ownerId")
                           );
                         break;
@@ -1836,8 +1949,8 @@ public class Interface {
                         break;
 
                     case SUPPORT_TICKET:
-                        System.out.printf("%d: (duration: %d, outcome: %s, topic: %s, userId: %d)\n",
-                            rs.getInt("tid"), rs.getInt("duration"), rs.getString("outcome"), rs.getString("topic"), rs.getInt("userId")
+                        System.out.printf("%d: (duration: %d, outcome: %s, topic: %s, userId: %d, aid: %d)\n",
+                            rs.getInt("tid"), rs.getInt("duration"), rs.getString("outcome"), rs.getString("topic"), rs.getInt("userId"), rs.getInt("aid")
                         );
                         break;
 
