@@ -840,34 +840,7 @@ public class Setup {
         "       'User is not a member of the specified workspace.'); " +
         "   END IF; " +
         "END;";
-    
-    /**
-     * @trigger when a persona is 'ATTEMPTING' to be deleted, check that no more
-     *      than 5 conversations using it (abort deletion if so). Then set the
-     *      persona of any conversations using it to NULL
-     */
-    public static final String deletePersonaTrigger = 
-        // Trigger on personal deletion
-        "CREATE OR REPLACE TRIGGER mngo1.prevent_persona_delete " +
-        "BEFORE DELETE ON mngo1.Persona " +
-        "FOR EACH ROW " +
-        // For each persona being deleted, declare a variable to count the number of conversations using that persona
-        "DECLARE " +
-        "   convo_count NUMBER; " +
-        // Begin the trigger
-        "BEGIN " +
-            // Get how many conversations are using this persona
-        "   SELECT COUNT(*) INTO convo_count " +
-        "   FROM mngo1.Conversation " +
-        "   WHERE pid = :OLD.pid; " +
-        // If the persona is being used by more than 5 conversations, raise an error to prevent deletion
-        "   IF convo_count > 5 THEN " +
-        "       RAISE_APPLICATION_ERROR(-20003, " +
-        "       'Cannot delete persona: more than 5 conversations are using it.'); " +
-        "   END IF; " +
-        "END;";
 
-    
     public static final String[] DeleteTriggers = {
         "DROP TRIGGER mngo1.prevent_message_insert",
         "PURGE RECYCLEBIN",
@@ -882,8 +855,7 @@ public class Setup {
     public static final String[] CreateTriggers = {
         messageLimitTrigger,
         unknownUserPromptInWorkspaceTrigger,
-        unknownConversationInWorkspaceTrigger,
-        deletePersonaTrigger
+        unknownConversationInWorkspaceTrigger
     };
 
 
