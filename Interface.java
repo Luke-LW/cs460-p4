@@ -416,72 +416,74 @@ public class Interface {
                     // with a SQL statement that is executed to manage the conversations and messages in the database based on user input
 
                 case 1: // New conversation
-                    String title = promptUserForStr(addConvoTitlePrompt, keyboard);
-                    int userId = 1;
-                    int pid = 1;
-                    // format and execute the SQL statement to add a conversation with the provided title
-                    statement = String.format("INSERT INTO mngo1.Conversation VALUES (%s, %d, %d)", title, userId, pid);
-                    executeStmt(statement, dbconn);
-                    return;
+                    {
+                        String title = promptUserForStr(addConvoTitlePrompt, keyboard);
+                        int userId = 1;
+                        int pid = 1;
+                        // format and execute the SQL statement to add a conversation with the provided title
+                        statement = String.format("INSERT INTO mngo1.Conversation VALUES (%s, %d, %d)", title, userId, pid);
+                        executeStmt(statement, dbconn);
+                        return;
+                    }
                 
                 case 2: // Add messages to conversation
-                    // Get all conversations to find which conversation to add messages to
-                    query = "SELECT * FROM mngo1.Conversation";
-                    count = executeQuery(query, dbconn, Entity.CONVERSATION);
-                    if (count == 0) {
-                        System.err.println("There are no conversations to select.");
-                        return;
+                    {
+                        // Get all conversations to find which conversation to add messages to
+                        query = "SELECT * FROM mngo1.Conversation";
+                        count = executeQuery(query, dbconn, Entity.CONVERSATION);
+                        if (count == 0) {
+                            System.err.println("There are no conversations to select.");
+                            return;
+                        } else {
+                            // At this point we have found the conversation the user wants
+                            // So we perform a similar operation to add a message to the conversation
+
+                            int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard);
+
+                            String msg = promptUserForStr("Enter message: ", keyboard);
+                            String sender = promptUserForStr("Enter sender (user/ai): ", keyboard);
+
+                            String mid = "SELECT NVL (MAX(mid), 0) + 1 FROM mngo1.Message WHERE cid = " + cid;
+                            int newId = getNextId(mid, dbconn);
+
+                            statement = String.format(
+                                "INSERT INTO mngo1.Message (mid, cid, message, sender, rating, timestamp) " +
+                                "VALUES (%d, %d, '%s', '%s', 0, SYSDATE)", 
+                                newId, cid, msg, sender);
+                            executeStmt(statement, dbconn);
+                            System.out.println("Message added to conversation successfully.");
+                            return;
+                        }
                     }
-                    else {
-                        int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard);
-                    }
-                    
-                        // At this point we have found the conversation the user wants
-                        // So we perform a similar operation to add a message to the conversation
-
-                    String msg = promptUserForStr("Enter message: ", keyboard);
-                    String sender = promptUserForStr("Enter sender (user/ai): ", keyboard);
-
-                    String mid = "SELECT NVL (MAX(mid), 0) + 1 FROM mngo1.Message WHERE cid = " + cid;
-                    int newId = getNextId(mid, dbconn);
-
-                    statement = String.format(
-                        "INSERT INTO mngo1.Message (mid, cid, message, sender, rating, timestamp) " +
-                        "VALUES (%d, %d, '%s', '%s', 0, SYSDATE)", 
-                        newId, cid, msg, sender);
-                    executeStmt(statement, dbconn);
-                    System.out.println("Message added to conversation successfully.");
-                    return;
-
                 case 3: // Update message feedback
-                    // Get all conversations to find which conversation to add messages to
-                    query = "SELECT * FROM mngo1.Conversation";
-                    count = executeQuery(query, dbconn, Entity.CONVERSATION);
-                    if (count == 0) {
-                        System.err.println("There are no conversations to select.");
+                    {
+                        // Get all conversations to find which conversation to add messages to
+                        query = "SELECT * FROM mngo1.Conversation";
+                        count = executeQuery(query, dbconn, Entity.CONVERSATION);
+                        if (count == 0) {
+                            System.err.println("There are no conversations to select.");
+                            return;
+                        }
+                        int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard);
+                        
+                        // Get all messages to find which message to update feedback for
+                        query = "SELECT * FROM mngo1.Message WHERE cid = " + cid;
+                        count = executeQuery(query, dbconn, Entity.MESSAGE);
+                        if (count == 0) {
+                            System.err.println("There are no messages to select.");
+                        }
+                        else {
+                            int mid = promptUserForInt(selectMessageForFeedbackPrompt, keyboard);
+                            int rating = promptUserForInt("Enter Rating (Thumbs Up = 1/Down = -1): ", keyboard);
+                            String ratingText = promptUserForStr("Feedback Text: ", keyboard);
+                            statement = String.format(
+                                "UPDATE mngo1.Message SET rating = %d, ratingText = '%s' " +
+                                "WHERE mid = %d AND cid = %d", rating, ratingText, mid, cid);
+                            executeStmt(statement, dbconn);
+                            System.out.println("Feedback updated.");
+                        }
                         return;
                     }
-                    else {
-                        int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard);
-                    }
-                    
-                    // Get all messages to find which message to update feedback for
-                    query = "SELECT * FROM mngo1.Message WHERE cid = " + cid;
-                    count = executeQuery(query, dbconn, Entity.MESSAGE);
-                    if (count == 0) {
-                        System.err.println("There are no messages to select.");
-                    }
-                    else {
-                        int mid = promptUserForInt(selectMessageForFeedbackPrompt, keyboard);
-                        int rating = promptUserForInt("Enter Rating (Thumbs Up = 1/Down = -1): ", keyboard);
-                        String ratingText = promptUserForStr("Feedback Text: ", keyboard);
-                        statement = String.format(
-                            "UPDATE mngo1.Message SET rating = %d, ratingText = '%s' " +
-                            "WHERE mid = %d AND cid = %d", rating, ratingText, mid, cid);
-                        executeStmt(statement, dbconn);
-                        System.out.println("Feedback updated.");
-                    }
-                    return;
 
                 case 4: // back to main menu
                     return;
@@ -605,34 +607,38 @@ public class Interface {
                     // with a SQL statement that is executed to manage the personas
 
                 case 1: // New persona
-                    // Prompt user for name and personality strings for the new persona
-                    String name = promptUserForStr(addPersonaNamePrompt, keyboard);
-                    String personality = promptUserForStr(addPersonaPersonalityPrompt, keyboard);
-                    // Get next persona ID
-                    String pidQuery = "SELECT NVL(MAX(pid), 0) + 1 FROM mngo1.Persona";
-                    int newPid = getNextId(pidQuery, dbconn);
-                    // Format and execute SQL statement to create new persona with provided inputs
-                    statement = String.format(
-                        "INSERT INTO mngo1.Persona (pid, name, personality) " +
-                        "VALUES (%d, '%s', '%s')", 
-                        newPid, name, personality);
-                    executeStmt(statement, dbconn);
-                    System.out.println("Persona created successfully with ID: " + newPid);
-                    return;    
+                    {
+                        // Prompt user for name and personality strings for the new persona
+                        String name = promptUserForStr(addPersonaNamePrompt, keyboard);
+                        String personality = promptUserForStr(addPersonaPersonalityPrompt, keyboard);
+                        // Get next persona ID
+                        String pidQuery = "SELECT NVL(MAX(pid), 0) + 1 FROM mngo1.Persona";
+                        int newPid = getNextId(pidQuery, dbconn);
+                        // Format and execute SQL statement to create new persona with provided inputs
+                        statement = String.format(
+                            "INSERT INTO mngo1.Persona (pid, name, personality) " +
+                            "VALUES (%d, '%s', '%s')", 
+                            newPid, name, personality);
+                        executeStmt(statement, dbconn);
+                        System.out.println("Persona created successfully with ID: " + newPid);
+                        return;    
+                    }
 
                 case 2: // delete persona
-                    // Get all personas to find which persona to delete
-                    query = "SELECT * FROM mngo1.Persona";
-                    count = executeQuery(query, dbconn, Entity.PERSONA);
-                    if (count == 0) {
-                        System.err.println("There are no personas to select.");
-                    }
-                    else {
-                        // Prompt user for which persona to delete
-                        int wid = promptUserForInt(selectPersonaToDeletePrompt, keyboard);
-                        statement = "DELETE FROM mngo1.Persona WHERE pid = " + pid;
-                        executeStmt(statement, dbconn);
-                        System.out.println("Persona deleted successfully.");
+                    {
+                        // Get all personas to find which persona to delete
+                        query = "SELECT * FROM mngo1.Persona";
+                        count = executeQuery(query, dbconn, Entity.PERSONA);
+                        if (count == 0) {
+                            System.err.println("There are no personas to select.");
+                        }
+                        else {
+                            // Prompt user for which persona to delete
+                            int pid = promptUserForInt(selectPersonaToDeletePrompt, keyboard);
+                            statement = "DELETE FROM mngo1.Persona WHERE pid = " + pid;
+                            executeStmt(statement, dbconn);
+                            System.out.println("Persona deleted successfully.");
+                        }
                     }
                     return;
 
@@ -736,41 +742,44 @@ public class Interface {
                     // with a SQL statement that is executed to manage subscriptions 
 
                 case 1: // Upgrade user tier
-                    // Get all users to find which user to upgrade
-                    query = "SELECT * FROM mngo1.Person";
-                    count = executeQuery(query, dbconn, Entity.USER);
-                    if (count == 0) {
-                        System.err.println("There are no users to select.");
-                    }
-                    else {
-                        // Prompt user for which user to upgrade
-                        int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard);
-                        int newTier = promptUserForInt("Enter new tier (1-3): ", keyboard);
-                        
-                        statement = String.format(
-                            "UPDATE mngo1.Membership SET tier = %d, hasPro = 1 " +
-                            "WHERE mtid = (SELECT mtid FROM mngo1.Person p " +
-                            "JOIN mngo1.Membership m ON p.userId = ? WHERE p.userId = %d)", // Simplified
-                            newTier, userId);  // Note: You may need to adjust based on actual FKs
-                        
-                        executeStmt(statement, dbconn);
-                        System.out.println("Subscription upgraded.");
+                    {
+                        // Get all users to find which user to upgrade
+                        query = "SELECT * FROM mngo1.Person";
+                        count = executeQuery(query, dbconn, Entity.USER);
+                        if (count == 0) {
+                            System.err.println("There are no users to select.");
                         }
-                    return;
+                        else {
+                            // Prompt user for which user to upgrade
+                            int userId = promptUserForInt(selectUserForUpgradePrompt, keyboard);
+                            int newTier = promptUserForInt("Enter new tier (1-3): ", keyboard);
+                            
+                            String statement = String.format(
+                                "UPDATE mngo1.Membership SET tier = %d, hasPro = 1 " +
+                                "WHERE mtid = (SELECT mtid FROM mngo1.Person p " +
+                                "JOIN mngo1.Membership m ON p.userId = ? WHERE p.userId = %d)", // Simplified
+                                newTier, userId);  // Note: You may need to adjust based on actual FKs
+                            
+                            executeStmt(statement, dbconn);
+                            System.out.println("Subscription upgraded.");
+                            }
+                        return;
+                    }
                 
                 case 2: // Check user limit
-                    // Get all users to find which user to check message limit for
-                    query = "SELECT * FROM mngo1.Person";
-                    count = executeQuery(query, dbconn, Entity.USER);
-                    if (count == 0) {
-                        System.err.println("There are no users to select.");
+                    {
+                        // Get all users to find which user to check message limit for
+                        query = "SELECT * FROM mngo1.Person";
+                        count = executeQuery(query, dbconn, Entity.USER);
+                        if (count == 0) {
+                            System.err.println("There are no users to select.");
+                        }
+                        else {
+                            // Prompt user for which user to check message limit for
+                            int userId = promptUserForInt(selectUserForLimitCheck, keyboard);
+                        }
+                        return;
                     }
-                    else {
-                        // Prompt user for which user to check message limit for
-                        int userId = promptUserForInt(selectUserForLimitCheck, keyboard);
-                    }
-                    return;
-
                 case 3: // back to main menu
                     return;
             
@@ -879,69 +888,72 @@ public class Interface {
                     // with a SQL statement that is executed to manage tickets
 
                 case 1: // New ticket
-                    // Prompt user for topic of support ticket, then format and execute SQL statement to create a new support ticket with that topic
-                    String topic = promptUserForStr(addTicketTopicPrompt, keyboard);
-                    int userId = promptUserForInt("Enter userId creating the ticket: ", keyboard);
-                    
-                    String tidQuery = "SELECT NVL(MAX(tid), 0) + 1 FROM mngo1.Ticket";
-                    int newTid = getNextId(tidQuery, dbconn);
-                    
-                    statement = String.format(
-                        "INSERT INTO mngo1.Ticket (tid, duration, outcome, topic, userId, aid) " +
-                        "VALUES (%d, 0, 'Waiting', '%s', %d, NULL)", 
-                        newTid, topic, userId);
-                    
-                    executeStmt(statement, dbconn);
-                    System.out.println("Support ticket created.");
-                    return;
-                
-                case 2: // Assign ticket to agent
-                    // Get all tickets to find which ticket to assign to an agent
-                    query = "SELECT * FROM mngo1.Ticket";
-                    count = executeQuery(query, dbconn, Entity.SUPPORT_TICKET);
-                    if (count == 0) {
-                        System.err.println("There are no tickets to select.");
+                    {
+                        // Prompt user for topic of support ticket, then format and execute SQL statement to create a new support ticket with that topic
+                        String topic = promptUserForStr(addTicketTopicPrompt, keyboard);
+                        int userId = promptUserForInt("Enter userId creating the ticket: ", keyboard);
+                        
+                        String tidQuery = "SELECT NVL(MAX(tid), 0) + 1 FROM mngo1.Ticket";
+                        int newTid = getNextId(tidQuery, dbconn);
+                        
+                        statement = String.format(
+                            "INSERT INTO mngo1.Ticket (tid, duration, outcome, topic, userId, aid) " +
+                            "VALUES (%d, 0, 'Waiting', '%s', %d, NULL)", 
+                            newTid, topic, userId);
+                        
+                        executeStmt(statement, dbconn);
+                        System.out.println("Support ticket created.");
                         return;
                     }
-                    else {
-                        // Prompt user for which ticket to assign to an agent
+                
+                case 2: // Assign ticket to agent
+                    {
+                        // Get all tickets to find which ticket to assign to an agent
+                        query = "SELECT * FROM mngo1.Ticket";
+                        count = executeQuery(query, dbconn, Entity.SUPPORT_TICKET);
+                        if (count == 0) {
+                            System.err.println("There are no tickets to select.");
+                            return;
+                        }
                         int tid = promptUserForInt(selectTicketForAgentPrompt, keyboard);
-                    }
 
                         // At this point we have selected the ticket we want to assign
                         // So we perform a similar operation to assign an agent to the ticket
 
-                    // Get all agents to find which agent to assign the ticket to
-                    query = "SELECT * FROM mngo1.Agent";
-                    count = executeQuery(query, dbconn, Entity.AGENT);
-                    if (count == 0) {
-                        System.err.println("There are no agents to select.");
+                        // Get all agents to find which agent to assign the ticket to
+                        query = "SELECT * FROM mngo1.Agent";
+                        count = executeQuery(query, dbconn, Entity.AGENT);
+                        if (count == 0) {
+                            System.err.println("There are no agents to select.");
+                        }
+                        else {
+                            // Prompt user for which agent to assign the ticket to
+                            
+                            int aid = promptUserForInt(selectAgentPrompt, keyboard);
+                            statement = "UPDATE mngo1.Ticket SET aid = " + aid + " WHERE tid = " + tid;
+                            executeStmt(statement, dbconn);
+                            System.out.println("Ticket assigned to agent.");
+                        }
+                        return;
                     }
-                    else {
-                        // Prompt user for which agent to assign the ticket to
-                        int aid = promptUserForInt(selectAgentPrompt, keyboard);
-                        statement = "UPDATE mngo1.Ticket SET aid = " + aid + " WHERE tid = " + tid;
-                        executeStmt(statement, dbconn);
-                        System.out.println("Ticket assigned to agent.");
-                    }
-                    return;
 
                 case 3: // Complete ticket
-                    // Get all tickets to find which ticket to mark as resolved
-                    query = "SELECT * FROM mngo1.Ticket";
-                    count = executeQuery(query, dbconn, Entity.SUPPORT_TICKET);
-                    if (count == 0) {
-                        System.err.println("There are no tickets to select.");
+                    {
+                        // Get all tickets to find which ticket to mark as resolved
+                        query = "SELECT * FROM mngo1.Ticket";
+                        count = executeQuery(query, dbconn, Entity.SUPPORT_TICKET);
+                        if (count == 0) {
+                            System.err.println("There are no tickets to select.");
+                        }
+                        else {
+                            // Prompt user for which ticket to mark as resolved
+                            int tid = promptUserForInt(selectTicketForResolvePrompt, keyboard);
+                            statement = "UPDATE mngo1.Ticket SET outcome = 'Resolved', duration = 30 WHERE tid = " + tid;
+                            executeStmt(statement, dbconn);
+                            System.out.println("Ticket marked as resolved.");
+                        }
+                        return;
                     }
-                    else {
-                        // Prompt user for which ticket to mark as resolved
-                        int tid = promptUserForInt(selectTicketForResolvePrompt, keyboard);
-                        statement = "UPDATE mngo1.Ticket SET outcome = 'Resolved', duration = 30 WHERE tid = " + tid;
-                        executeStmt(statement, dbconn);
-                        System.out.println("Ticket marked as resolved.");
-                    }
-                    return;
-            
                 case 4: // back to main menu
                     return;
 
