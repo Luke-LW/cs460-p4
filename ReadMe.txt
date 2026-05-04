@@ -5,12 +5,14 @@ exercise the required functionalities.
         javac Database.java Interface.java OracleUser.java Setup.java
 
     Init Database
-         java
+        java Database
     
     Begin user interface
         java Interface
 
-    Navigate through the menu/submenu via numpad (0-9) to access the functionalities of the DBMS
+    Navigate through the menu/submenu via numpad (1-10) to access the functionalities of the DBMS
+
+    * For any issues with Oracle account, change login credentials on OracleUser.java *
 
 ii. The workload distribution among team members (that is, which people were responsible for
 which parts of the project).
