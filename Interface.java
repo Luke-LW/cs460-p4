@@ -107,7 +107,7 @@ public class Interface {
         "3: Back\n" +
         "------------------------\n";
     private final static String addWorkspacePrivacyPrompt =
-        "Select a privacy option for this workspace: ";
+        "Select a privacy option for this workspace (private/public): ";
     private final static String selectWorkspacePrompt =
         "Select a workspace to modify: ";
     private final static String modifyWorkspaceInterface =
@@ -139,7 +139,7 @@ public class Interface {
         "4: Back\n" +
         "------------------------\n";
     private final static String addPromptPrivacyPrompt = 
-        "Select a privacy option for this prompt: ";
+        "Select a privacy option for this prompt (private/public): ";
     private final static String addPromptInstructionPrompt =
         "Enter the instructions for this prompt: ";
     private final static String selectPromptPrompt =
@@ -439,56 +439,61 @@ public class Interface {
                     return;
 
                 case 3: // Delete user account
-                    // Similar to update user account, we need to get all users 
                     query = "SELECT * FROM mngo1.Person";
                     count = executeQuery(query, dbconn, Entity.USER);
-                    if (count == 0)
+                    if (count == 0) {
                         System.err.println("There are no users to select.");
-                    else {
-                        // If the user exists , call helper method to prompt user for specific user to delete
+                    } else {
                         int userId = promptUserForInt(selectUserForDeletePrompt, keyboard, dbconn, Entity.USER);
-                        // Check for unpaid invoices before deleting
+                        
+                        // Check constraints
                         String unpaidCheck = String.format(
                             "SELECT COUNT(*) FROM mngo1.Invoice i " +
-                            "WHERE i.status = 'unpaid' " +
-                            "AND i.brid IN (SELECT brid FROM mngo1.BillingRecord WHERE userId = %d)", userId);
-                        // Check for open support tickets before deleting
+                            "WHERE i.status = 'unpaid' AND i.brid IN " +
+                            "(SELECT brid FROM mngo1.BillingRecord WHERE userId = %d)", userId);
+                        
                         String ticketCheck = String.format(
                             "SELECT COUNT(*) FROM mngo1.Ticket " +
                             "WHERE userId = %d AND outcome = 'Waiting'", userId);
+                        
                         try {
-                            Statement unpaidStmt = dbconn.createStatement();
-                            ResultSet unpaidRs = unpaidStmt.executeQuery(unpaidCheck);
-                            unpaidRs.next();
-                            int unpaidCount = unpaidRs.getInt(1);
- 
-                            Statement ticketStmt = dbconn.createStatement();
-                            ResultSet ticketRs = ticketStmt.executeQuery(ticketCheck);
-                            ticketRs.next();
-                            int openTicketCount = ticketRs.getInt(1);
- 
+                            Statement checkStmt = dbconn.createStatement();
+                            ResultSet rs1 = checkStmt.executeQuery(unpaidCheck);
+                            rs1.next();
+                            int unpaidCount = rs1.getInt(1);
+                            
+                            ResultSet rs2 = checkStmt.executeQuery(ticketCheck);
+                            rs2.next();
+                            int openTicketCount = rs2.getInt(1);
+                            
                             if (unpaidCount > 0 || openTicketCount > 0) {
                                 System.err.println("Cannot delete user: has unpaid invoices or open support tickets.");
                             } else {
+                                // NEW: Explicitly delete messages (and any other dependent data)
+                                String deleteMessages = "DELETE FROM mngo1.Message WHERE cid IN " +
+                                                      "(SELECT cid FROM mngo1.Conversation WHERE userId = " + userId + ")";
+                                executeStmt(deleteMessages, dbconn);
+                                
+                                // Optional: delete conversations too (cascades should handle most, but explicit is safer)
+                                String deleteConvos = "DELETE FROM mngo1.Conversation WHERE userId = " + userId;
+                                executeStmt(deleteConvos, dbconn);
+                                
                                 statement = String.format("DELETE FROM mngo1.Person WHERE userId = %d", userId);
                                 executeStmt(statement, dbconn);
-                                System.out.println("User account deleted successfully.");
+                                System.out.println("User account and all related messages/conversations deleted successfully.");
                             }
                         } catch (SQLException e) {
-                            System.err.println("Error checking user before deletion: " + e);
+                            System.err.println("Error during deletion: " + e.getMessage());
                         }
                     }
+                    
                     exit = true;
                     System.out.println("\nEnter 1 to return to main menu");
                     while (exit){
                         input = keyboard.nextInt();
                         keyboard.nextLine();
-                        if (input == 1) {
-                            exit = false;
-                        }
-                        else {
-                            System.err.println("Please enter 1 to return to the main menu.");
-                        }
+                        if (input == 1) exit = false;
+                        else System.err.println("Please enter 1 to return to the main menu.");
                     }
                     return;
                 case 4: // update address
@@ -603,13 +608,41 @@ public class Interface {
                 case 1: // New conversation
                     {
                         String title = promptUserForStr(addConvoTitlePrompt, keyboard);
-                        int userId = 1;
-                        int pid = 1;
+
+                        String userQuery = "SELECT * FROM mngo1.Person";
+                        executeQuery(userQuery, dbconn, Entity.USER);
+                        int userId = promptUserForInt("Enter userId: ", keyboard, dbconn, Entity.USER);
+                        
+                        String personaQuery = "SELECT * FROM mngo1.Persona";
+                        executeQuery(personaQuery, dbconn, Entity.PERSONA);
+                        System.out.println("\nSelect persona (or 0 for none):");
+                        // Allow 0 for no persona
+                        int pid = 0;
+                        try {
+                            pid = keyboard.nextInt();
+                            keyboard.nextLine();
+                            if (pid != 0) {
+                                // Verify persona exists if not 0
+                                String verifyPid = "SELECT * FROM mngo1.Persona WHERE pid = " + pid;
+                                Statement stmt = dbconn.createStatement();
+                                ResultSet rs = stmt.executeQuery(verifyPid);
+                                if (!rs.next()) {
+                                    System.err.println("Warning: Persona " + pid + " not found. Setting to NULL.");
+                                    pid = 0; // or handle as needed
+                                }
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Invalid persona input, defaulting to NULL.");
+                            pid = 0;
+                            keyboard.nextLine();
+                        }
+
                         String idQuery = "SELECT MAX(cid) FROM mngo1.Conversation";
                         int newId = getNextId(idQuery, dbconn);
                         // format and execute the SQL statement to add a conversation with the provided title
-                        statement = String.format("INSERT INTO mngo1.Conversation VALUES (%d, '%s', %d, %d)", newId, title, userId, pid);
+                        statement = String.format("INSERT INTO mngo1.Conversation VALUES (%d, '%s', %d, %d)", newId, title, userId, (pid == 0 ? "NULL" : pid));
                         executeStmt(statement, dbconn);
+                        System.out.println("Conversation created successfully.");
                         exit = true;
                         System.out.println("\nEnter 1 to return to main menu");
                         while (exit){
@@ -694,7 +727,7 @@ public class Interface {
                         else {
                             int mid = promptUserForInt(selectMessageForFeedbackPrompt, keyboard, dbconn, Entity.MESSAGE);
                             int rating = promptUserForInt("Enter Rating (Thumbs Up = 1/Down = -1): ", keyboard, dbconn, Entity.RATING_VALUE);
-                            String ratingText = promptUserForStr("Feedback Text: ", keyboard);
+                            String ratingText = promptUserForOptStr("Feedback Text: ", keyboard);
                             statement = String.format(
                                 "UPDATE mngo1.Message SET rating = %d, ratingText = '%s' " +
                                 "WHERE mid = %d AND cid = %d", rating, ratingText, mid, cid);
@@ -745,6 +778,7 @@ public class Interface {
         boolean exit;
         int count;
         int input = 0;
+        String userQuery = "SELECT * FROM mngo1.Person";
 
         while (true) {
             try {
@@ -767,7 +801,9 @@ public class Interface {
                     String privacy = promptUserForStr(addWorkspacePrivacyPrompt, keyboard);
                     String widQuery = "SELECT NVL(MAX(wid), 0) + 1 FROM mngo1.Workspace";
                     int newWid = getNextId(widQuery, dbconn);
-                    int ownerId = 1;
+                    executeQuery(userQuery, dbconn, Entity.USER);
+                    int ownerId = promptUserForInt("Enter owner userId: ", keyboard, dbconn, Entity.USER);
+                        
                     statement = String.format("INSERT INTO mngo1.Workspace VALUES (%d, '%s', %d)", newWid, privacy, ownerId);
                     executeStmt(statement, dbconn);
                     System.out.println("Workspace created successfully.");
@@ -806,6 +842,8 @@ public class Interface {
                                 newPrivacy, wid);
                         } 
                         else if (choice == 2) {
+                            executeQuery(userQuery, dbconn, Entity.USER);
+                       
                             int newOwner = promptUserForInt("Enter new owner userId: ", keyboard, dbconn, Entity.USER);
                             statement = String.format(
                                 "UPDATE mngo1.Workspace SET ownerId = %d WHERE wid = %d", 
@@ -994,6 +1032,7 @@ public class Interface {
                     // Format and execute SQL statement to create new prompt template with provided inputs
                     statement = String.format("INSERT INTO mngo1.UserPrompt VALUES (%d, '%s', '%s', %d)", newId, instructions, privacy, userId);
                     executeStmt(statement, dbconn);
+                    System.out.println("Prompt template created successfully with ID: " + newId);
                     exit = true;
                     System.out.println("\nEnter 1 to return to main menu");
                     while (exit){
@@ -1610,6 +1649,7 @@ public class Interface {
                     return;
 
                 case 4: // Query 4
+                    int tier = promptUserForInt("Select membership tier (1-3): ", keyboard, dbconn, Entity.SUBSCRIPTION_TIER);
                     query = """
                             SELECT username, membership_tier, total_messages_sent,
                                 avg_message_length_chars, num_conversations, last_message_date
@@ -1623,13 +1663,14 @@ public class Interface {
                                 JOIN mngo1.Membership mbr ON p.mtid = mbr.mtid
                                 JOIN mngo1.Conversation c ON p.userId = c.userId
                                 JOIN mngo1.Message m ON c.cid = m.cid
-                                WHERE m.sender = 'user'
+                                WHERE m.sender = 'user' AND mbr.tier = """ + tier + """
                                 GROUP BY p.username, mbr.tier
                                 ORDER BY COUNT(m.mid) DESC, ROUND(AVG(LENGTH(m.message)), 2) DESC
                             )
                             WHERE ROWNUM <= 5
                             """;
-                    System.out.println("\nTop 5 users with most messages sent:");
+                    String tierLabel = (tier == 1) ? "Free" : (tier == 2) ? "Plus" : "Enterprise";
+                    System.out.println("\nTop 5 most active users in the " + tierLabel + " tier:");                    
                     count = executeQuery(query, dbconn, Entity.SPECIAL_QUERY_4);
                     exit = true;
                     System.out.println("\nEnter 1 to return to main menu");
@@ -1844,6 +1885,38 @@ public class Interface {
             input = keyboard.nextLine().strip();
             if (input.length() > 255 || input.length() < 1) {
                 msg = "String must be between length of 1 & 255. Please try again: ";
+            }
+            else break;
+        }
+        // Once we have valid input, we return that input string
+        return input;
+    }
+
+    /*---------------------------------------------------------------------
+        |  Method promptUserForOptStr(prompt, keyboard)
+        |
+        |  Purpose: prompts the user for a string input and validates the input 
+        |
+        |  Pre-condition: User needs to input a string in response to a prompt
+        |  Post-condition: A valid string input is returned based on the provided prompt and user input
+        |
+        |  Parameters:
+        |      String prompt - the prompt to display to the user when asking for input (from constants defined at the top of the file)
+        |      Scanner keyboard - the scanner object used to read user input
+        |
+        |  Returns: string - the user input to the scanner, between 0 and 255 characters in length
+        *-------------------------------------------------------------------*/
+    private static String promptUserForOptStr(String prompt, Scanner keyboard) {
+        String msg = prompt;
+        String input = "";
+
+        // Repeatedly prompt user until they provide a valid input string between 0 and 255 characters in length
+        while (true) {
+            System.out.println();
+            System.out.print(msg);
+            input = keyboard.nextLine().strip();
+            if (input.length() > 255) {
+                msg = "String must be between length of 0 & 255. Please try again: ";
             }
             else break;
         }
