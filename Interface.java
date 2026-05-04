@@ -40,7 +40,7 @@ import java.util.Scanner;
 public class Interface {
     private enum Entity {
         USER, MESSAGE, CONVERSATION, WORKSPACE, PERSONA, USER_PROMPT, INVOICE, SUPPORT_TICKET, AGENT,
-        SPECIAL_QUERY_1, SPECIAL_QUERY_2, SPECIAL_QUERY_3, SPECIAL_QUERY_4, SUBSCRIPTION_TIER, RATING_VALUE
+        SPECIAL_QUERY_1, SPECIAL_QUERY_2, SPECIAL_QUERY_3, SPECIAL_QUERY_4, SUBSCRIPTION_TIER, RATING_VALUE, LANGUAGE
     };
 
     private final static String mainInterface =
@@ -77,7 +77,7 @@ public class Interface {
     private final static String selectUserForDeletePrompt = 
         "Select a user to delete: ";
     private final static String addUserLanguagePrompt =
-        "Select a language id (0: Spanish, 1:English, 2: French)";
+        "Select a language id for the user: ";
 
 
     private final static String manageConvoInterface =
@@ -333,14 +333,23 @@ public class Interface {
                     String email = promptUserForStr(addUserEmailPrompt, keyboard);
                     String username = promptUserForStr(addUserNamePrompt, keyboard);
                     String password = promptUserForStr(addUserPasswordPrompt, keyboard);
-                    int lid = promptUserForInt(addUserLanguagePrompt, keyboard);
-                    // Get the next userId to use for this user
-                    String idQuery = "SELECT MAX(userId) FROM mngo1.Person";
-                    int newId = getNextId(idQuery, dbconn);
-                    // format and execute the SQL statement to add a user account with the provided information
-                    statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', %d, 4)", newId, username, password, email, lid);
-                    executeStmt(statement, dbconn);
-                    System.out.println("User account created successfully.");
+                    // Prompt the user to select a language from the available options
+                    query = "SELECT * FROM mngo1.Language";
+                    count = executeQuery(query, dbconn, Entity.LANGUAGE);
+                    if (count == 0) {
+                        System.err.println("There are no languages to select");
+                    }
+                    else {
+                        int lid = promptUserForInt(addUserLanguagePrompt, keyboard, dbconn, Entity.LANGUAGE);
+                        // Get the next userId to use for this user
+                        String idQuery = "SELECT MAX(userId) FROM mngo1.Person";
+                        int newId = getNextId(idQuery, dbconn);
+                        // format and execute the SQL statement to add a user account with the provided information
+                        statement = String.format("INSERT INTO mngo1.Person VALUES (%d, '%s', '%s', '%s', %d, 4)", newId, username, password, email, lid);
+                        executeStmt(statement, dbconn);
+                        System.out.println("User account created successfully.");
+                    }
+                    
                     return;
                 
                 case 2: // Update user account
@@ -1116,7 +1125,6 @@ public class Interface {
     private static boolean executeStmt(String statement, Connection dbconn) {
         try {
             Statement stmt = dbconn.createStatement();
-            System.out.println("Executing: " + statement + "\n\n");
             stmt.execute(statement);
             System.out.println("Executed statement: " + statement);
             return true;
@@ -1205,6 +1213,12 @@ public class Interface {
                     case AGENT:
                         System.out.printf("%d: (name: %s)\n",
                             rs.getInt("aid"), rs.getString("name")
+                        );
+                        break;
+
+                    case LANGUAGE:
+                        System.out.printf("%d: (language: %s)\n",
+                          rs.getInt("lid"), rs.getString("language")
                         );
                         break;
 
@@ -1363,6 +1377,11 @@ public class Interface {
             case SUPPORT_TICKET:
                 tableId = "mngo1.Ticket";
                 pk = "tid";
+                break;
+
+            case LANGUAGE:
+                tableId = "mngo1.Language";
+                pk = "lid";
                 break;
           }
 
