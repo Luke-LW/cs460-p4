@@ -71,9 +71,9 @@ public class Setup {
         "DROP TABLE Person CASCADE CONSTRAINTS PURGE";
     public static final String PersonData =
         "INSERT ALL\n" +
-        "\tINTO mngo1.Person VALUES (1, 'Minh', 'abc', 'thatboy@arizona.edu', 30, 1, 4)\n" +
-        "\tINTO mngo1.Person VALUES (2, 'Luke', 'abc', 'coolkid@arizona.edu', 29, 2, 5)\n" +
-        "\tINTO mngo1.Person VALUES (3, 'Derek', 'abc', 'funguy@arizona.edu', 28, 3, 6)\n" +
+        "\tINTO mngo1.Person VALUES (1, 'Minh', 'abc', 'thatboy@arizona.edu', 30, 1, 1)\n" +
+        "\tINTO mngo1.Person VALUES (2, 'Luke', 'abc', 'coolkid@arizona.edu', 29, 2, 2)\n" +
+        "\tINTO mngo1.Person VALUES (3, 'Derek', 'abc', 'funguy@arizona.edu', 28, 3, 3)\n" +
         "SELECT 1 FROM dual";
 
     /**
@@ -212,9 +212,9 @@ public class Setup {
         "DROP TABLE mngo1.Membership CASCADE CONSTRAINTS PURGE";
     public static final String MembershipData =
         "INSERT ALL\n" +
-        "\tINTO mngo1.Membership VALUES (4, 0, 3, 100)\n" +
-        "\tINTO mngo1.Membership VALUES (5, 1, 2, 1000)\n" +
-        "\tINTO mngo1.Membership VALUES (6, 0, 1, 5)\n" +
+        "\tINTO mngo1.Membership VALUES (1, 0, 3, 100)\n" +
+        "\tINTO mngo1.Membership VALUES (2, 1, 2, 1000)\n" +
+        "\tINTO mngo1.Membership VALUES (3, 0, 1, 5)\n" +
         "SELECT 1 FROM dual";
 
     /**
@@ -755,6 +755,29 @@ public class Setup {
      */
 
     /**
+     * @trigger A message cannot be added to a conversation if the user hit their
+     *      message limit.
+     */
+    public static final String messageLimitTrigger =
+        // Trigger before insert on a message
+        "CREATE OR REPLACE TRIGGER mngo1.prevent_message_insert " +
+        "BEFORE INSERT ON mngo1.Message " +
+        "FOR EACH ROW " +
+        // For each message being inserted, lookup which conversation it is and which user it is
+        "DECLARE " +
+        "   SELECT p.messagesLeft " +
+        "   INTO v_messagesLeft " +
+        "   FROM mngo1.Conversation c " +
+        "   JOIN mngo1.Person p " +
+        "       ON p.userId = c.userId" +
+        "   WHERE c.cid = :NEW.cid;" +
+        // block the insertion if user hits message limit
+        "IF v_messagesLeft < 1 THEN" +
+        "   RAISE_APPLICATION_ERROR(-20001, 'User has hit their message limit'); " +
+        "END IF; " +
+        "END";;
+
+    /**
      * @trigger Deleting a user must fail if there are unpaid invoices or open support tickets.
      */
     public static final String UnpaidInvoiceTrigger = 
@@ -888,6 +911,7 @@ public class Setup {
     };
 
     public static final String[] CreateTriggers = {
+        messageLimitTrigger,
         UnpaidInvoiceTrigger,
         unknownUserPromptInWorkspaceTrigger,
         unknownConversationInWorkspaceTrigger,

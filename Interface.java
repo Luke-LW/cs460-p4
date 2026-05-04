@@ -169,7 +169,7 @@ public class Interface {
         "Create Support Tickets\n" +
         "1: Create ticket\n" +
         "2: Assign ticket\n" +
-        "3: Mark ticket as resolved\n" +
+        "3: Change a ticket status\n" +
         "4: Back\n" +
         "------------------------\n";
     private final static String addTicketTopicPrompt =
@@ -178,7 +178,7 @@ public class Interface {
         "Select a ticket to assign to an agent: ";
     private final static String selectAgentPrompt =
         "Select an agent to assign to the ticket: ";
-    private final static String selectTicketForResolvePrompt =
+    private final static String selectTicketForStatusPrompt =
         "Select a ticket to change status: ";
     private final static String selectTicketStatus =
         "Select a status (0: Waiting, 1: Escalated, 2: Resolved): ";
@@ -475,19 +475,28 @@ public class Interface {
                         } else {
                             // At this point we have found the conversation the user wants
                             // So we perform a similar operation to add a message to the conversation
-
                             int cid = promptUserForInt(selectConvoForUpdatePrompt, keyboard, dbconn, Entity.CONVERSATION);
-
                             String msg = promptUserForStr("Enter message: ", keyboard);
                             String sender = promptUserForStr("Enter sender (user/ai): ", keyboard);
                             String mid = "SELECT NVL (MAX(mid), 0) + 1 FROM mngo1.Message WHERE cid = " + cid;
                             int newId = getNextId(mid, dbconn);
-
+                            
+                            // attempt to insert message
                             statement = String.format(
                                 "INSERT INTO mngo1.Message (mid, cid, message, sender, rating, timestamp) " +
                                 "VALUES (%d, %d, '%s', '%s', 0, SYSDATE)", 
                                 newId, cid, msg, sender);
-                            executeStmt(statement, dbconn);
+
+                            // execute: but if user hits message limit, it will fail
+                            boolean success = executeStmt(statement, dbconn);
+                            
+                            // if the user sent this, decrement messagesLeft
+                            if (sender.equals("user") && success) {
+                                statement = String.format(
+                                    "UPDATE mngo1.Person SET messagesLeft = messagesLeft - 1 " +
+                                    "WHERE userId = (SELECT userId FROM mngo1.Conversation WHERE cid = %d)", cid);
+                                executeStmt(statement, dbconn);
+                            }
                             System.out.println("Message added to conversation successfully.");
                             return;
                         }
@@ -1030,7 +1039,7 @@ public class Interface {
                         }
                         else {
                             // Prompt user for which ticket to mark as resolved
-                            int tid = promptUserForInt(selectTicketForResolvePrompt, keyboard, dbconn, Entity.SUPPORT_TICKET);
+                            int tid = promptUserForInt(selectTicketForStatusPrompt, keyboard, dbconn, Entity.SUPPORT_TICKET);
                             int status = promptUserForInt(selectTicketStatus, keyboard, dbconn, Entity.SUPPORT_TICKET);
                             String statusStr;
                             switch (status) {
@@ -1215,8 +1224,20 @@ public class Interface {
     private static boolean executeStmt(String statement, Connection dbconn) {
         try {
             Statement stmt = dbconn.createStatement();
-            stmt.execute(statement);
-            System.out.println("Executed statement: " + statement);
+            boolean hasResultSet = stmt.execute(statement);
+            if (hasResultSet) {
+                ResultSet rs = stmt.getResultSet();
+                ResultSetMetaData md = rs.getMetaData();
+                int cols = md.getColumnCount();
+                while (rs.next()) {
+                    for (int i = 1; i <= cols; i++) {
+                        System.out.print(md.getColumnName(i) + "=" + rs.getObject(i) + " ");
+                    }
+                    System.out.println();
+                }
+            }
+
+            // System.out.println("Executed statement: " + statement);
             return true;
 
         } catch (SQLException e) {
