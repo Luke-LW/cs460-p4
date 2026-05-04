@@ -106,7 +106,7 @@ public class Interface {
         "2: Modify workspace\n" +
         "3: View workspace members\n" +
         "4: Add conversation to workspace\n" +
-        "4: Back\n" +
+        "5: Back\n" +
         "------------------------\n";
     private final static String addWorkspacePrivacyPrompt =
         "Select a privacy option for this workspace (private/public): ";
@@ -885,7 +885,21 @@ public class Interface {
                     }
                     return;
 
-                case 3: // Add conversation to workspace
+                case 3: // check members in a workspace
+                    // Get all workspaces
+                    query = "SELECT * FROM mngo1.Workspace";
+                    count = executeQuery(query, dbconn, Entity.WORKSPACE);
+                    if (count == 0) {
+                        System.err.println("There are no workspaces to select.");
+                    }
+                    else {
+                        // Prompt user for which workspace to modify.
+                        int wid = promptUserForInt(selectWorkspacePrompt, keyboard, dbconn, Entity.WORKSPACE);
+                        statement = String.format("SELECT p.username FROM mngo1.Person p JOIN mngo1.UserWorkspace uw ON p.userId = uw.userId WHERE uw.wid = %d", wid);
+                        executeStmt(statement, dbconn);
+                    }
+                    return;
+                case 4: // Add conversation to workspace
                     {
                         // Show all workspaces
                         String wsQuery = "SELECT * FROM mngo1.Workspace";
@@ -980,7 +994,7 @@ public class Interface {
                     }
                     return;
 
-                case 4: // back to main menu
+                case 5: // back to main menu
                     return;
             
                 default:
